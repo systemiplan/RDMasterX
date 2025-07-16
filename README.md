@@ -1,8 +1,8 @@
-# OPMO Connect - Remote Connection Manager
+# RDMasterX - Remote Connection Manager
 
 A modern, secure desktop application for managing remote connections including RDP, SSH, VNC, Telnet, and web logins. Built with Electron, React, Node.js, and SQLite.
 
-![OPMO Connect](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![RDMasterX](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
@@ -56,7 +56,7 @@ A modern, secure desktop application for managing remote connections including R
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd opmo-connect
+cd RDMasterX
 
 # Install dependencies
 npm install
@@ -101,7 +101,7 @@ npm run dist
 ## 📂 Project Structure
 
 ```
-opmo-connect/
+RDMasterX/
 ├── src/
 │   ├── backend/          # Express server and API
 │   │   ├── routes/       # API routes
@@ -169,7 +169,7 @@ Create a `.env` file in the root directory:
 NODE_ENV=production
 PORT=3001
 JWT_SECRET=your-secret-key-here
-DB_PATH=./data/opmo.db
+DB_PATH=./data/rdmasterx.db
 ```
 
 ### Connection Types Supported
@@ -258,4 +258,4 @@ For support and questions:
 
 ---
 
-**OPMO Connect** - Secure, Modern Remote Connection Management
+**RDMasterX** - Secure, Modern Remote Connection Management
