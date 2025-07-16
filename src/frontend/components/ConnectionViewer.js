@@ -90,14 +90,11 @@ const ConnectionViewer = ({
     const serverName = server?.name || connection?.name || 'Unknown Server';
     
     if (connectionStatus === 'connected' || connectionStatus === 'connecting') {
-      console.log(`Terminating ${connectionType} session for ${serverName}`);
-      
       // Set disconnecting state immediately
       setConnectionStatus('disconnecting');
       
       // For RDP sessions, perform proper cleanup
       if (connectionType === 'RDP') {
-        console.log(`Closing RDP connection to ${serverName} (${server?.host || connection?.host})`);
         
         // In a real implementation, you would call the actual RDP disconnect API
         // Example: await rdpClient.disconnect(server.host, server.port)
@@ -112,7 +109,6 @@ const ConnectionViewer = ({
           setConnectionStatus('disconnected');
           setConnectionProgress(0);
           setErrorMessage('');
-          console.log(`RDP session to ${serverName} terminated successfully`);
         }, 500);
         
       } else {
@@ -123,7 +119,6 @@ const ConnectionViewer = ({
           setConnectionStatus('disconnected');
           setConnectionProgress(0);
           setErrorMessage('');
-          console.log(`${connectionType} session to ${serverName} terminated successfully`);
         }, cleanupTime);
       }
     } else {
@@ -131,7 +126,6 @@ const ConnectionViewer = ({
       setConnectionStatus('disconnected');
       setConnectionProgress(0);
       setErrorMessage('');
-      console.log(`${connectionType} session state reset for ${serverName}`);
     }
   };
 

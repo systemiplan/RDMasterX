@@ -5,7 +5,7 @@ const crypto = require('crypto-js');
 
 class Database {
   constructor() {
-    this.dbPath = path.join(__dirname, '../../data/opmo.db');
+    this.dbPath = path.join(__dirname, '../../data/rdmasterx.db');
     this.init();
   }
 
@@ -21,7 +21,6 @@ class Database {
       if (err) {
         console.error('Error opening database:', err.message);
       } else {
-        console.log('Connected to SQLite database');
         this.createTables();
       }
     });
@@ -43,8 +42,6 @@ class Database {
     `, (err) => {
       if (err) {
         console.error('Error creating users table:', err);
-      } else {
-        console.log('Users table created successfully');
       }
     });
 
@@ -73,8 +70,6 @@ class Database {
     `, (err) => {
       if (err) {
         console.error('Error creating connections table:', err);
-      } else {
-        console.log('Connections table created successfully');
       }
     });
 
@@ -95,8 +90,6 @@ class Database {
     `, (err) => {
       if (err) {
         console.error('Error creating audit_logs table:', err);
-      } else {
-        console.log('Audit logs table created successfully');
       }
     });
 
@@ -114,7 +107,6 @@ class Database {
       if (err) {
         console.error('Error creating user_sessions table:', err);
       } else {
-        console.log('User sessions table created successfully');
         // Create default user after all tables are created
         setTimeout(() => this.createDefaultUser(), 1000);
       }
@@ -134,7 +126,7 @@ class Database {
         
         this.db.run(
           'INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)',
-          ['admin', 'admin@opmo.local', hashedPassword, 'admin'],
+          ['admin', 'admin@rdmasterx.local', hashedPassword, 'admin'],
           (err) => {
             if (err) {
               console.error('Error creating default admin user:', err);
@@ -148,11 +140,11 @@ class Database {
   }
 
   // Encryption/Decryption methods for sensitive data
-  encrypt(text, key = 'opmo-secret-key') {
+  encrypt(text, key = 'rdmasterx-secret-key') {
     return crypto.AES.encrypt(text, key).toString();
   }
 
-  decrypt(encryptedText, key = 'opmo-secret-key') {
+  decrypt(encryptedText, key = 'rdmasterx-secret-key') {
     const bytes = crypto.AES.decrypt(encryptedText, key);
     return bytes.toString(crypto.enc.Utf8);
   }

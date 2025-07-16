@@ -251,15 +251,11 @@ const Dashboard = () => {
   }, [connectionTabs, tabIdCounter, theme]);
 
   const closeTab = useCallback((targetKey) => {
-    console.log('closeTab called with:', targetKey);
-    
     // Find the current tab index
     const currentTabIndex = connectionTabs.findIndex(tab => tab.key === targetKey);
-    console.log('Current tab index:', currentTabIndex);
     
     // Remove the tab
     const newTabs = connectionTabs.filter(tab => tab.key !== targetKey);
-    console.log('Remaining tabs:', newTabs.length);
     
     setConnectionTabs(newTabs);
     
@@ -277,11 +273,9 @@ const Dashboard = () => {
         }
         
         const newActiveTab = newTabs[newActiveIndex];
-        console.log('Switching to tab:', newActiveTab?.key);
         setActiveTabKey(newActiveTab?.key);
       } else {
         // No tabs left, go back to main dashboard
-        console.log('No tabs left, returning to main dashboard');
         setActiveTabKey(null);
       }
     }
@@ -732,7 +726,6 @@ const Dashboard = () => {
   
   const handleQuickConnect = (e) => {
     if (e.key === 'Enter' && quickConnect.trim()) {
-      console.log('handleQuickConnect - Enter pressed');
       e.preventDefault();
       e.stopPropagation();
       
@@ -744,7 +737,6 @@ const Dashboard = () => {
       
       // Prevent multiple executions
       if (isProcessingQuickConnect) {
-        console.log('handleQuickConnect - Already processing, returning');
         return;
       }
       setIsProcessingQuickConnect(true);
@@ -1267,7 +1259,7 @@ const Dashboard = () => {
                     (theme === 'dark' ? '#404040' : '#e6f7ff') : 'transparent',
                   borderRadius: '4px',
                   margin: '2px 0'
-                }} onClick={() => console.log('Favorite clicked:', item.name)}>
+                }} onClick={() => handleServerClick(item)}>
                   <List.Item.Meta
                     avatar={<span style={{ fontSize: '16px', marginRight: '8px' }}>{item.icon}</span>}
                     title={<span style={{ 
@@ -1300,7 +1292,6 @@ const Dashboard = () => {
             {/* Quick Add Credential Component */}
             <QuickAddCredential 
               onCredentialSaved={(credentialData) => {
-                console.log('Quick credential saved:', credentialData);
                 // You can add logic here to refresh the credentials list
               }}
             />
@@ -1325,7 +1316,7 @@ const Dashboard = () => {
                   ) ? (theme === 'dark' ? '#404040' : '#e6f7ff') : 'transparent',
                   borderRadius: '4px',
                   margin: '2px 0'
-                }} onClick={() => console.log('Credential clicked:', item.name)}>
+                }} onClick={() => {}}>
                   <List.Item.Meta
                     avatar={<span style={{ fontSize: '16px', marginRight: '8px' }}>{item.icon}</span>}
                     title={<span style={{ 
@@ -1405,7 +1396,7 @@ const Dashboard = () => {
                   padding: '8px 0', 
                   cursor: 'pointer',
                   borderBottom: theme === 'dark' ? '1px solid #404040' : '1px solid #f0f0f0'
-                }} onClick={() => console.log('Setting clicked:', item.key)}>
+                }} onClick={() => {}}>
                   <List.Item.Meta
                     avatar={<span style={{ fontSize: '16px', marginRight: '8px' }}>{item.icon}</span>}
                     title={<span style={{ 
@@ -1475,7 +1466,8 @@ const Dashboard = () => {
         alert('Opening Import Dialog...');
         break;
       default:
-        console.log('Unknown action:', action);
+        // Unknown action - no action needed
+        break;
     }
   };
 
@@ -1518,7 +1510,8 @@ const Dashboard = () => {
         setSelectedLeftMenu('settings');
         break;
       default:
-        console.log('Unknown action:', action.key);
+        // Unknown action - no action needed
+        break;
     }
   };
 
@@ -1562,13 +1555,13 @@ const Dashboard = () => {
         setSelectedLeftMenu('settings');
         break;
       default:
-        console.log('Unknown navbar action:', key);
+        // Unknown navbar action - no action needed
+        break;
     }
   };
 
   // Handle credential saved
   const handleCredentialSaved = (credentialData) => {
-    console.log('Credential saved:', credentialData);
     // You can add logic here to refresh the credentials list or update the UI
     // For example, if you have a credentials state, you could update it:
     // setCredentials(prev => [...prev, credentialData]);
@@ -1952,25 +1945,18 @@ const Dashboard = () => {
             onSelect={(value, option) => {
               // Use a timeout to check if this was triggered by Enter
               setTimeout(() => {
-                // Debug logging
-                console.log('onSelect triggered (delayed check):', { value, enterPressed, enterPressedRef: enterPressedRef.current, isProcessingQuickConnect });
-                
                 // If Enter was pressed, don't process this onSelect
                 if (enterPressedRef.current || enterPressed) {
-                  console.log('onSelect blocked - Enter key was pressed');
                   return;
                 }
                 
                 // Prevent multiple quick connects
                 if (isProcessingQuickConnect) {
-                  console.log('onSelect blocked due to isProcessingQuickConnect=true');
                   return;
                 }
                 
                 // Set processing flag for mouse clicks
                 setIsProcessingQuickConnect(true);
-                
-                console.log('onSelect proceeding with mouse click processing');
                 
                 // Find the selected server by name
                 const selectedServer = quickConnectSuggestions.find(s => s.name === value);
@@ -2767,7 +2753,6 @@ const Dashboard = () => {
         visible={showAddCredential}
         onClose={() => setShowAddCredential(false)}
         onCredentialSaved={(credentialData) => {
-          console.log('Credential saved:', credentialData);
           // You can add logic here to refresh the credentials list or update the UI
         }}
       />

@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const Database = require('../database');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'opmo-jwt-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || 'rdmasterx-jwt-secret-key';
 const db = new Database();
 
 const authenticateToken = async (req, res, next) => {

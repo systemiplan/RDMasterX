@@ -20,7 +20,7 @@
     "setup": "node setup.js"
   },
   "build": {
-    "appId": "com.opmo.connect",
+    "appId": "com.rdmasterx.app",
     "productName": "RDMasterX",
     "directories": {
       "output": "release"
