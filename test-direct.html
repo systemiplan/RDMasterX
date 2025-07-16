@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Direct Test</title>
+</head>
+<body>
+    <h1>Direct JavaScript Test</h1>
+    <div id="status">Loading...</div>
+    
+    <script>
+        console.log('=== DIRECT TEST START ===');
+        
+        // Test basic JS execution
+        document.getElementById('status').textContent = 'JavaScript is working!';
+        document.getElementById('status').style.color = 'green';
+        document.getElementById('status').style.fontSize = '20px';
+        
+        // Test DOM manipulation after a delay
+        setTimeout(function() {
+            document.body.style.background = 'linear-gradient(135deg, #007bff, #28a745)';
+            document.body.innerHTML = `
+                <div style="color: white; text-align: center; padding: 50px; font-family: Arial;">
+                    <h1 style="font-size: 3em;">✅ DIRECT TEST SUCCESS!</h1>
+                    <p style="font-size: 1.5em;">JavaScript execution confirmed working</p>
+                </div>
+            `;
+        }, 1000);
+        
+        console.log('=== DIRECT TEST END ===');
+    </script>
+</body>
+</html>

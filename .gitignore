@@ -1,0 +1,10 @@
+# Build artifacts
+release/
+win-unpacked/
+*.exe
+
+# Node modules
+node_modules/
+
+# Other
+rtl-fix.js

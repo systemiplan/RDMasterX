@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bundle Test</title>
+</head>
+<body>
+    <h1>Testing bundle.js directly</h1>
+    <div id="status">Loading...</div>
+    
+    <script>
+        console.log('=== TEST HTML LOADED ===');
+        
+        // Set up error handling
+        window.addEventListener('error', function(e) {
+            console.error('=== ERROR ===', e);
+            document.getElementById('status').textContent = 'Error: ' + e.message;
+            document.getElementById('status').style.color = 'red';
+        });
+        
+        // Test basic JS
+        document.getElementById('status').textContent = 'HTML loaded, waiting for bundle...';
+        document.getElementById('status').style.color = 'blue';
+    </script>
+    
+    <!-- Load bundle.js directly -->
+    <script src="http://localhost:3000/bundle.js"></script>
+    
+    <script>
+        // Check if bundle loaded
+        setTimeout(function() {
+            if (window.bundleLoaded) {
+                document.getElementById('status').textContent = 'SUCCESS: Bundle loaded!';
+                document.getElementById('status').style.color = 'green';
+            } else {
+                document.getElementById('status').textContent = 'FAILED: Bundle did not load';
+                document.getElementById('status').style.color = 'red';
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,231 @@
+/* ConnectionViewer.css */
+
+.connection-viewer {
+  height: 100%;
+  width: 100%;
+  position: relative;
+  background: #f8f9fa;
+  overflow: hidden;
+}
+
+.connection-viewer-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  position: relative;
+}
+
+.connection-viewer-content {
+  height: calc(100% - 64px);
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.connection-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  background: #f8f9fa;
+  padding: 60px 40px;
+}
+
+.connection-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  background: #fff1f0;
+  padding: 60px 40px;
+}
+
+.connection-desktop {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  position: relative;
+}
+
+.rdp-simulation {
+  width: 90%;
+  height: 85%;
+  background: #2d3142;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.rdp-taskbar {
+  height: 40px;
+  background: #1a1a1a;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  border-bottom: 1px solid #333;
+}
+
+.rdp-start-button {
+  background: #0078d4;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  margin-right: 8px;
+}
+
+.rdp-desktop-area {
+  flex: 1;
+  background: linear-gradient(135deg, #0078d4 0%, #1084d0 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.rdp-desktop-icons {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.rdp-desktop-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.rdp-desktop-icon:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.rdp-desktop-icon-image {
+  width: 32px;
+  height: 32px;
+  background: #fff;
+  border-radius: 4px;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.connection-controls {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  gap: 8px;
+}
+
+.connection-control-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 12px;
+}
+
+.connection-control-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.connection-status-indicator {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.connection-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #52c41a;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Dark theme support */
+[data-theme="dark"] .connection-viewer {
+  background: #1a1a1a;
+}
+
+[data-theme="dark"] .connection-loading {
+  background: #1a1a1a;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .connection-error {
+  background: #2a1a1a;
+  color: #ffffff;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .connection-viewer-header {
+    padding: 8px 12px;
+  }
+  
+  .connection-loading,
+  .connection-error {
+    padding: 40px 20px;
+  }
+  
+  .rdp-simulation {
+    width: 95%;
+    height: 90%;
+  }
+  
+  .connection-controls {
+    top: 10px;
+    right: 10px;
+    gap: 4px;
+  }
+  
+  .connection-control-btn {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+}
