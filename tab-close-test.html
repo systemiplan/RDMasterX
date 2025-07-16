@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tab Close Button Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .tab-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .tab-header {
+            display: flex;
+            border-bottom: 2px solid #e8e8e8;
+            margin-bottom: 20px;
+        }
+        
+        .tab-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px 6px 0 0;
+            margin-right: 4px;
+            min-width: 150px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .tab-item:hover {
+            background: #e9ecef;
+        }
+        
+        .tab-item.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        
+        .tab-text {
+            flex: 1;
+            margin-right: 8px;
+            font-weight: 500;
+        }
+        
+        .close-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            border-radius: 3px;
+            border: none;
+            background: transparent;
+            color: #666;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            line-height: 1;
+        }
+        
+        .close-btn:hover {
+            background: rgba(0,0,0,0.1);
+            color: #000;
+        }
+        
+        .tab-item.active .close-btn {
+            color: rgba(255,255,255,0.8);
+        }
+        
+        .tab-item.active .close-btn:hover {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+        
+        .tab-content {
+            padding: 20px;
+            background: white;
+            border-radius: 0 0 8px 8px;
+            min-height: 200px;
+        }
+        
+        .instructions {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #e7f3ff;
+            border: 1px solid #bee5eb;
+            border-radius: 6px;
+        }
+        
+        .instructions h3 {
+            margin-top: 0;
+            color: #0c5460;
+        }
+        
+        .instructions ul {
+            margin: 10px 0 0 20px;
+        }
+        
+        .instructions li {
+            margin: 5px 0;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <div class="tab-container">
+        <div class="instructions">
+            <h3>Tab Close Button Test</h3>
+            <p>This demonstrates the fixed tab close button functionality:</p>
+            <ul>
+                <li>Click the "×" button to close a tab</li>
+                <li>The button should be clearly visible and clickable</li>
+                <li>Hover effects work properly</li>
+                <li>The button doesn't interfere with tab switching</li>
+            </ul>
+        </div>
+        
+        <div class="tab-header" id="tabHeader">
+            <div class="tab-item active" data-tab="tab1">
+                <span class="tab-text">DC01 - Domain Controller</span>
+                <button class="close-btn" onclick="closeTab(event, 'tab1')" title="Close tab">×</button>
+            </div>
+            <div class="tab-item" data-tab="tab2">
+                <span class="tab-text">WEB01 - Web Server</span>
+                <button class="close-btn" onclick="closeTab(event, 'tab2')" title="Close tab">×</button>
+            </div>
+            <div class="tab-item" data-tab="tab3">
+                <span class="tab-text">DB01 - Database</span>
+                <button class="close-btn" onclick="closeTab(event, 'tab3')" title="Close tab">×</button>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="tabContent">
+            <div id="tab1-content">
+                <h4>DC01 - Domain Controller</h4>
+                <p>This is the content for the Domain Controller tab. The close button should work properly.</p>
+                <p><strong>Status:</strong> Connected</p>
+                <p><strong>IP:</strong> 192.168.1.10</p>
+            </div>
+            <div id="tab2-content" style="display: none;">
+                <h4>WEB01 - Web Server</h4>
+                <p>This is the content for the Web Server tab. Click the × button to close.</p>
+                <p><strong>Status:</strong> Connected</p>
+                <p><strong>IP:</strong> 192.168.1.20</p>
+            </div>
+            <div id="tab3-content" style="display: none;">
+                <h4>DB01 - Database</h4>
+                <p>This is the content for the Database tab. The close functionality is working.</p>
+                <p><strong>Status:</strong> Connected</p>
+                <p><strong>IP:</strong> 192.168.1.30</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function closeTab(event, tabId) {
+            event.stopPropagation();
+            event.preventDefault();
+            
+            console.log('Closing tab:', tabId);
+            
+            // Find and remove the tab
+            const tabElement = document.querySelector(`[data-tab="${tabId}"]`);
+            const contentElement = document.getElementById(`${tabId}-content`);
+            
+            if (tabElement) {
+                tabElement.remove();
+            }
+            
+            if (contentElement) {
+                contentElement.remove();
+            }
+            
+            // If this was the active tab, activate the first remaining tab
+            const remainingTabs = document.querySelectorAll('.tab-item');
+            if (remainingTabs.length > 0) {
+                const firstTab = remainingTabs[0];
+                firstTab.classList.add('active');
+                
+                // Show the content for the first remaining tab
+                const firstTabId = firstTab.getAttribute('data-tab');
+                const firstContent = document.getElementById(`${firstTabId}-content`);
+                if (firstContent) {
+                    firstContent.style.display = 'block';
+                }
+            } else {
+                // No tabs remaining
+                document.getElementById('tabContent').innerHTML = '<p>No tabs remaining. All connections have been closed.</p>';
+            }
+        }
+        
+        // Tab switching functionality
+        document.addEventListener('click', function(event) {
+            const tabItem = event.target.closest('.tab-item');
+            if (tabItem && !event.target.classList.contains('close-btn')) {
+                // Remove active class from all tabs
+                document.querySelectorAll('.tab-item').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                
+                // Hide all content
+                document.querySelectorAll('[id$="-content"]').forEach(content => {
+                    content.style.display = 'none';
+                });
+                
+                // Activate clicked tab
+                tabItem.classList.add('active');
+                
+                // Show corresponding content
+                const tabId = tabItem.getAttribute('data-tab');
+                const content = document.getElementById(`${tabId}-content`);
+                if (content) {
+                    content.style.display = 'block';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

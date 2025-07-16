@@ -242,171 +242,9 @@ const Dashboard = () => {
     const tabKey = `tab-${tabIdCounter}`;
     const newTab = {
       key: tabKey,
-      title: (
-        <div 
-          style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'space-between',
-            minWidth: '120px',
-            maxWidth: '200px',
-            padding: '8px 12px',
-            fontSize: '13px',
-            lineHeight: '1.2',
-            background: 'transparent',
-            border: 'none'
-          }}
-          onContextMenu={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // Create context menu
-            const contextMenu = document.createElement('div');
-            contextMenu.className = 'tab-context-menu';
-            contextMenu.style.cssText = `
-              position: fixed;
-              left: ${e.clientX}px;
-              top: ${e.clientY}px;
-              background: ${theme === 'dark' ? '#1f1f1f' : '#ffffff'};
-              border: 1px solid ${theme === 'dark' ? '#434343' : '#d9d9d9'};
-              border-radius: 6px;
-              box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.08), 0 9px 28px 0 rgba(0, 0, 0, 0.05), 0 3px 6px -4px rgba(0, 0, 0, 0.12);
-              padding: 4px 0;
-              min-width: 120px;
-              z-index: 9999;
-              user-select: none;
-            `;
-            
-            const menuItems = [
-              { 
-                label: 'Reconnect', 
-                action: () => {
-                  // Find the ConnectionViewer component for this tab and trigger reconnect
-                  const connectionViewer = document.querySelector(`[data-tab-id="${tabKey}"]`);
-                  if (connectionViewer) {
-                    // Dispatch a custom reconnect event to the ConnectionViewer
-                    const reconnectEvent = new CustomEvent('reconnect', { 
-                      bubbles: true,
-                      detail: { tabId: tabKey }
-                    });
-                    connectionViewer.dispatchEvent(reconnectEvent);
-                  }
-                }
-              },
-              { label: 'Close', action: () => closeTab(tabKey) }
-            ];
-            
-            menuItems.forEach(item => {
-              const menuItem = document.createElement('div');
-              menuItem.style.cssText = `
-                display: flex;
-                align-items: center;
-                padding: 8px 12px;
-                cursor: pointer;
-                font-size: 14px;
-                color: ${theme === 'dark' ? '#ffffff' : '#262626'};
-                transition: background 0.2s;
-              `;
-              menuItem.textContent = item.label;
-              menuItem.addEventListener('click', () => {
-                item.action();
-                if (document.body.contains(contextMenu)) {
-                  document.body.removeChild(contextMenu);
-                }
-              });
-              menuItem.addEventListener('mouseenter', () => {
-                menuItem.style.background = theme === 'dark' ? '#262626' : '#f0f0f0';
-              });
-              menuItem.addEventListener('mouseleave', () => {
-                menuItem.style.background = 'transparent';
-              });
-              contextMenu.appendChild(menuItem);
-            });
-            
-            document.body.appendChild(contextMenu);
-            
-            // Remove menu on click outside
-            const removeMenu = (event) => {
-              if (!contextMenu.contains(event.target)) {
-                if (document.body.contains(contextMenu)) {
-                  document.body.removeChild(contextMenu);
-                }
-                document.removeEventListener('click', removeMenu);
-              }
-            };
-            
-            setTimeout(() => {
-              document.addEventListener('click', removeMenu);
-            }, 10);
-          }}
-        >
-          {/* Clean tab with only server name and close button */}
-          <div 
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'space-between',
-              width: '100%',
-              overflow: 'hidden',
-              pointerEvents: 'none' // Disable pointer events on container
-            }}
-          >
-            <span style={{ 
-              fontWeight: 500, 
-              fontSize: '13px', 
-              color: theme === 'dark' ? '#fff' : '#262626',
-              textOverflow: 'ellipsis',
-              overflow: 'hidden',
-              whiteSpace: 'nowrap',
-              flexGrow: 1,
-              marginRight: '8px',
-              pointerEvents: 'auto' // Enable pointer events on text
-            }}>
-              {server.name || server.host}
-            </span>
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                closeTab(tabKey);
-              }}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-              style={{ 
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '16px',
-                height: '16px',
-                borderRadius: '2px',
-                cursor: 'pointer',
-                fontSize: '12px',
-                color: theme === 'dark' ? '#8c8c8c' : '#8c8c8c',
-                transition: 'all 0.2s ease',
-                flexShrink: 0,
-                border: 'none',
-                background: 'transparent',
-                userSelect: 'none',
-                pointerEvents: 'auto' // Enable pointer events on button
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.background = theme === 'dark' ? '#3a3a3a' : '#f0f0f0';
-                e.target.style.color = theme === 'dark' ? '#fff' : '#262626';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.background = 'transparent';
-                e.target.style.color = theme === 'dark' ? '#8c8c8c' : '#8c8c8c';
-              }}
-            >
-              ×
-            </button>
-          </div>
-        </div>
-      ),
+      title: server.name || server.host,
       server: server,
-      closable: false // Disable default close button since we're using custom one
+      closable: true // Enable default Ant Design close button
     };
 
     setConnectionTabs(prev => [...prev, newTab]);
@@ -415,65 +253,48 @@ const Dashboard = () => {
   }, [connectionTabs, tabIdCounter, theme]);
 
   const closeTab = useCallback((targetKey) => {
-    // Find the tab before removing it
-    const tabToClose = connectionTabs.find(tab => tab.key === targetKey);
-    if (!tabToClose) {
-      return;
-    }
-
-    // First, properly disconnect the session
-    const tabElement = document.querySelector(`[data-tab-id="${targetKey}"]`);
-    if (tabElement) {
-      // Dispatch a disconnect event to the ConnectionViewer
-      const disconnectEvent = new CustomEvent('disconnect', { 
-        bubbles: true,
-        detail: { tabId: targetKey }
-      });
-      tabElement.dispatchEvent(disconnectEvent);
-      
-      // Wait for session termination before proceeding with cleanup
-      setTimeout(() => {
-        // Remove event listeners and clean up
-        tabElement.removeEventListener('reconnect', () => {});
-        tabElement.removeEventListener('disconnect', () => {});
-        
-        // If the element has a parent and is properly attached, remove it
-        if (tabElement.parentNode) {
-          try {
-            tabElement.parentNode.removeChild(tabElement);
-          } catch (e) {
-            // Element might have already been removed, ignore
-            console.log('Element already removed from DOM');
-          }
+    console.log('closeTab called with:', targetKey);
+    
+    // Find the current tab index
+    const currentTabIndex = connectionTabs.findIndex(tab => tab.key === targetKey);
+    console.log('Current tab index:', currentTabIndex);
+    
+    // Remove the tab
+    const newTabs = connectionTabs.filter(tab => tab.key !== targetKey);
+    console.log('Remaining tabs:', newTabs.length);
+    
+    setConnectionTabs(newTabs);
+    
+    // Handle active tab switching
+    if (activeTabKey === targetKey) {
+      if (newTabs.length > 0) {
+        // If there are remaining tabs, choose the previous one or the first one
+        let newActiveIndex;
+        if (currentTabIndex > 0) {
+          // Go to the previous tab
+          newActiveIndex = currentTabIndex - 1;
+        } else {
+          // If we're closing the first tab, go to the new first tab
+          newActiveIndex = 0;
         }
-      }, 800); // Wait for session termination to complete
+        
+        const newActiveTab = newTabs[newActiveIndex];
+        console.log('Switching to tab:', newActiveTab?.key);
+        setActiveTabKey(newActiveTab?.key);
+      } else {
+        // No tabs left, go back to main dashboard
+        console.log('No tabs left, returning to main dashboard');
+        setActiveTabKey(null);
+      }
     }
-
-    // Remove any existing context menus
+    
+    // Clean up any context menus
     const contextMenus = document.querySelectorAll('.tab-context-menu');
     contextMenus.forEach(menu => {
       if (menu.parentNode) {
         menu.parentNode.removeChild(menu);
       }
     });
-
-    // Filter out the tab after a delay to allow session termination
-    setTimeout(() => {
-      const tabs = connectionTabs.filter(tab => tab.key !== targetKey);
-      setConnectionTabs(tabs);
-      
-      // Handle active tab switching
-      if (activeTabKey === targetKey) {
-        if (tabs.length > 0) {
-          // Switch to the last tab or the previous one
-          const closedTabIndex = connectionTabs.findIndex(tab => tab.key === targetKey);
-          const newActiveIndex = Math.max(0, closedTabIndex - 1);
-          setActiveTabKey(tabs[newActiveIndex]?.key || tabs[tabs.length - 1]?.key);
-        } else {
-          setActiveTabKey(null);
-        }
-      }
-    }, 100); // Small delay to ensure UI updates properly
   }, [connectionTabs, activeTabKey]);
 
   const handleTabChange = useCallback((key) => {
@@ -2843,10 +2664,11 @@ const Dashboard = () => {
               flexDirection: 'column'
             }}>
               <Tabs
-                type="card"
+                type="editable-card"
                 activeKey={activeTabKey}
                 onChange={handleTabChange}
                 onEdit={handleTabEdit}
+                hideAdd={true}
                 style={{ 
                   height: '100%',
                   display: 'flex',

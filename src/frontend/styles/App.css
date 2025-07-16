@@ -1121,9 +1121,39 @@ body {
 }
 
 /* Tab close button styles */
+.clean-tabs .ant-tabs-tab-remove {
+  pointer-events: auto !important;
+  z-index: 999 !important;
+  position: relative !important;
+  color: #999 !important;
+  font-size: 12px !important;
+  margin-left: 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 16px !important;
+  height: 16px !important;
+  border-radius: 2px !important;
+  transition: all 0.2s ease !important;
+}
+
+.clean-tabs .ant-tabs-tab-remove:hover {
+  background: rgba(255, 77, 79, 0.1) !important;
+  color: #ff4d4f !important;
+}
+
+[data-theme="dark"] .clean-tabs .ant-tabs-tab-remove {
+  color: #bbb !important;
+}
+
+[data-theme="dark"] .clean-tabs .ant-tabs-tab-remove:hover {
+  background: rgba(255, 77, 79, 0.15) !important;
+  color: #ff7875 !important;
+}
+
 .clean-tabs .ant-tabs-tab button {
   pointer-events: auto !important;
-  z-index: 10 !important;
+  z-index: 999 !important;
   position: relative !important;
 }
 
@@ -1140,6 +1170,41 @@ body {
 }
 
 .clean-tabs .ant-tabs-tab-btn > div > button {
+  pointer-events: auto !important;
+  z-index: 999 !important;
+  position: relative !important;
+}
+
+/* Ensure close button is always clickable */
+.clean-tabs button[title="Close tab"] {
+  pointer-events: auto !important;
+  z-index: 999 !important;
+  position: relative !important;
+}
+
+/* Fix for tab button container */
+.clean-tabs .ant-tabs-tab-btn > div {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+}
+
+/* Override any conflicting styles */
+.clean-tabs .ant-tabs-tab {
+  position: relative !important;
+}
+
+.clean-tabs .ant-tabs-tab * {
+  pointer-events: none !important;
+}
+
+.clean-tabs .ant-tabs-tab button,
+.clean-tabs .ant-tabs-tab button * {
+  pointer-events: auto !important;
+}
+
+.clean-tabs .ant-tabs-tab .ant-tabs-tab-btn > div > span:first-child {
   pointer-events: auto !important;
 }
 

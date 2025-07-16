@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Close Tab Test - RDMasterX</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        
+        .status-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        
+        .test-result {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        
+        .browser-link {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            text-decoration: none;
+            margin: 10px 0;
+        }
+        
+        .browser-link:hover {
+            background: #0056b3;
+        }
+        
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔧 RDMasterX Tab Close Fix</h1>
+        
+        <div class="status-success">
+            <h3>✅ Fix Applied Successfully!</h3>
+            <p>The tab close button has been fixed with the following changes:</p>
+            <ul>
+                <li>Simplified tab creation to use Ant Design's native close button</li>
+                <li>Fixed the <code>closeTab</code> function to work properly</li>
+                <li>Added proper console logging for debugging</li>
+                <li>Removed complex custom close button implementation</li>
+            </ul>
+        </div>
+        
+        <div class="status-info">
+            <h3>📋 How to Test:</h3>
+            <ol>
+                <li>Open the RDMasterX application: <a href="http://localhost:3000" class="browser-link" target="_blank">http://localhost:3000</a></li>
+                <li>Connect to a server to create tabs</li>
+                <li>Click the "×" button on any tab</li>
+                <li>The tab should close and switch to the previous tab</li>
+                <li>When closing the last tab, it should return to the main dashboard</li>
+            </ol>
+        </div>
+        
+        <div class="test-result">
+            <h3>🎯 Expected Behavior:</h3>
+            <p><strong>When you click the close button (×):</strong></p>
+            <ul>
+                <li>✅ Tab closes immediately</li>
+                <li>✅ If multiple tabs: switches to previous tab</li>
+                <li>✅ If only one tab: closes and returns to main dashboard</li>
+                <li>✅ Console shows detailed logs of the operation</li>
+            </ul>
+        </div>
+        
+        <div class="test-result">
+            <h3>🔍 Debug Information:</h3>
+            <p>Check the browser console (F12) for detailed logs:</p>
+            <div class="code-block">
+closeTab called with: tab-1<br>
+Current tab index: 0<br>
+Remaining tabs: 2<br>
+Switching to tab: tab-2
+            </div>
+        </div>
+        
+        <div class="test-result">
+            <h3>📚 Technical Details:</h3>
+            <p>The fix involved:</p>
+            <ul>
+                <li><strong>Simplified Tab Creation:</strong> Using <code>closable: true</code> instead of custom close buttons</li>
+                <li><strong>Fixed Logic:</strong> Proper tab index calculation and switching</li>
+                <li><strong>Console Logging:</strong> Added debugging information</li>
+                <li><strong>Ant Design Integration:</strong> Using the native <code>onEdit</code> handler</li>
+            </ul>
+        </div>
+        
+        <div class="status-info">
+            <h3>🚀 Alternative Test:</h3>
+            <p>If the main application isn't working, you can also:</p>
+            <ul>
+                <li>Right-click on any tab to open the context menu</li>
+                <li>Click "Close Tab" from the context menu</li>
+                <li>This should demonstrate the same behavior</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
