@@ -4,12 +4,7 @@ import {
   Typography, 
   Spin, 
   Alert, 
-  Row, 
-  Col, 
   Progress,
-  Tooltip,
-  Divider,
-  Dropdown,
   Menu,
   Modal,
   Input
@@ -18,12 +13,10 @@ import {
   DesktopOutlined, 
   CodeOutlined, 
   DisconnectOutlined,
-  SettingOutlined,
   ReloadOutlined,
   CloseOutlined,
   CopyOutlined,
-  EditOutlined,
-  MoreOutlined
+  EditOutlined
 } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
@@ -58,22 +51,6 @@ const ConnectionViewer = ({
       }
     };
 
-    const handleSettingsEvent = (event) => {
-      if (event.type === 'settings') {
-        // Show settings dropdown (simulate click on settings button)
-        const settingsButton = document.querySelector(`[data-tab-id="${tabId}"] .settings-dropdown`);
-        if (settingsButton) {
-          settingsButton.click();
-        }
-      }
-    };
-
-    const handleRenameEvent = (event) => {
-      if (event.type === 'rename') {
-        handleRename();
-      }
-    };
-
     const handleDisconnectEvent = (event) => {
       if (event.type === 'disconnect') {
         // Properly terminate the session before cleanup
@@ -84,13 +61,9 @@ const ConnectionViewer = ({
     const element = document.querySelector(`[data-tab-id="${tabId}"]`);
     if (element) {
       element.addEventListener('reconnect', handleReconnectEvent);
-      element.addEventListener('settings', handleSettingsEvent);
-      element.addEventListener('rename', handleRenameEvent);
       element.addEventListener('disconnect', handleDisconnectEvent);
       return () => {
         element.removeEventListener('reconnect', handleReconnectEvent);
-        element.removeEventListener('settings', handleSettingsEvent);
-        element.removeEventListener('rename', handleRenameEvent);
         element.removeEventListener('disconnect', handleDisconnectEvent);
       };
     }
@@ -309,28 +282,6 @@ const ConnectionViewer = ({
   const contextMenu = (
     <Menu items={contextMenuItems} />
   );
-
-  // Settings dropdown menu items
-  const settingsMenuItems = [
-    {
-      key: 'close',
-      label: 'Close Tab',
-      icon: <CloseOutlined />,
-      onClick: () => handleDisconnect()
-    },
-    {
-      key: 'duplicate',
-      label: 'Duplicate Tab',
-      icon: <CopyOutlined />,
-      onClick: handleDuplicate
-    },
-    {
-      key: 'rename',
-      label: 'Rename Tab',
-      icon: <EditOutlined />,
-      onClick: handleRename
-    }
-  ];
 
   const renderConnectionView = () => {
     if (connectionStatus === 'connecting') {
@@ -602,22 +553,6 @@ const ConnectionViewer = ({
         height: '100%'
       }}>
         {renderConnectionView()}
-      </div>
-      
-      {/* Hidden Settings Dropdown - can be triggered from context menu */}
-      <div style={{ position: 'absolute', top: '-1000px', left: '-1000px' }}>
-        <Dropdown
-          menu={{ items: settingsMenuItems }}
-          trigger={['click']}
-          placement="bottomRight"
-        >
-          <Button 
-            className="settings-dropdown"
-            type="text" 
-            icon={<SettingOutlined />} 
-            size="small"
-          />
-        </Dropdown>
       </div>
       
       {/* Rename Modal */}

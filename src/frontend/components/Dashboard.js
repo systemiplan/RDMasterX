@@ -270,7 +270,7 @@ const Dashboard = () => {
               border-radius: 6px;
               box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.08), 0 9px 28px 0 rgba(0, 0, 0, 0.05), 0 3px 6px -4px rgba(0, 0, 0, 0.12);
               padding: 4px 0;
-              min-width: 150px;
+              min-width: 120px;
               z-index: 9999;
               user-select: none;
             `;
@@ -290,46 +290,6 @@ const Dashboard = () => {
                     connectionViewer.dispatchEvent(reconnectEvent);
                   }
                 }
-              },
-              { 
-                label: 'Connection Settings', 
-                action: () => {
-                  // Find the ConnectionViewer component for this tab and trigger settings
-                  const connectionViewer = document.querySelector(`[data-tab-id="${tabKey}"]`);
-                  if (connectionViewer) {
-                    // Dispatch a custom settings event to the ConnectionViewer
-                    const settingsEvent = new CustomEvent('settings', { 
-                      bubbles: true,
-                      detail: { tabId: tabKey }
-                    });
-                    connectionViewer.dispatchEvent(settingsEvent);
-                  }
-                }
-              },
-              { 
-                type: 'divider'
-              },
-              { 
-                label: 'Duplicate Tab', 
-                action: () => handleDuplicate(tabKey)
-              },
-              { 
-                label: 'Rename Tab', 
-                action: () => {
-                  // Find the ConnectionViewer component for this tab and trigger rename
-                  const connectionViewer = document.querySelector(`[data-tab-id="${tabKey}"]`);
-                  if (connectionViewer) {
-                    // Dispatch a custom rename event to the ConnectionViewer
-                    const renameEvent = new CustomEvent('rename', { 
-                      bubbles: true,
-                      detail: { tabId: tabKey }
-                    });
-                    connectionViewer.dispatchEvent(renameEvent);
-                  }
-                }
-              },
-              { 
-                type: 'divider'
               },
               { 
                 label: 'Close Tab', 
@@ -573,46 +533,6 @@ const Dashboard = () => {
                   }
                 },
                 { 
-                  label: 'Connection Settings', 
-                  action: () => {
-                    // Find the ConnectionViewer component for this tab and trigger settings
-                    const connectionViewer = document.querySelector(`[data-tab-id="${newTabKey}"]`);
-                    if (connectionViewer) {
-                      // Dispatch a custom settings event to the ConnectionViewer
-                      const settingsEvent = new CustomEvent('settings', { 
-                        bubbles: true,
-                        detail: { tabId: newTabKey }
-                      });
-                      connectionViewer.dispatchEvent(settingsEvent);
-                    }
-                  }
-                },
-                { 
-                  type: 'divider'
-                },
-                { 
-                  label: 'Duplicate Tab', 
-                  action: () => handleDuplicate(newTabKey)
-                },
-                { 
-                  label: 'Rename Tab', 
-                  action: () => {
-                    // Find the ConnectionViewer component for this tab and trigger rename
-                    const connectionViewer = document.querySelector(`[data-tab-id="${newTabKey}"]`);
-                    if (connectionViewer) {
-                      // Dispatch a custom rename event to the ConnectionViewer
-                      const renameEvent = new CustomEvent('rename', { 
-                        bubbles: true,
-                        detail: { tabId: newTabKey }
-                      });
-                      connectionViewer.dispatchEvent(renameEvent);
-                    }
-                  }
-                },
-                { 
-                  type: 'divider'
-                },
-                { 
                   label: 'Close Tab', 
                   action: () => closeTab(newTabKey) 
                 }
@@ -804,46 +724,6 @@ const Dashboard = () => {
                           connectionViewer.dispatchEvent(reconnectEvent);
                         }
                       }
-                    },
-                    { 
-                      label: 'Connection Settings', 
-                      action: () => {
-                        // Find the ConnectionViewer component for this tab and trigger settings
-                        const connectionViewer = document.querySelector(`[data-tab-id="${tabId}"]`);
-                        if (connectionViewer) {
-                          // Dispatch a custom settings event to the ConnectionViewer
-                          const settingsEvent = new CustomEvent('settings', { 
-                            bubbles: true,
-                            detail: { tabId: tabId }
-                          });
-                          connectionViewer.dispatchEvent(settingsEvent);
-                        }
-                      }
-                    },
-                    { 
-                      type: 'divider'
-                    },
-                    { 
-                      label: 'Duplicate Tab', 
-                      action: () => handleDuplicate(tabId)
-                    },
-                    { 
-                      label: 'Rename Tab', 
-                      action: () => {
-                        // Find the ConnectionViewer component for this tab and trigger rename
-                        const connectionViewer = document.querySelector(`[data-tab-id="${tabId}"]`);
-                        if (connectionViewer) {
-                          // Dispatch a custom rename event to the ConnectionViewer
-                          const renameEvent = new CustomEvent('rename', { 
-                            bubbles: true,
-                            detail: { tabId: tabId }
-                          });
-                          connectionViewer.dispatchEvent(renameEvent);
-                        }
-                      }
-                    },
-                    { 
-                      type: 'divider'
                     },
                     { 
                       label: 'Close Tab', 
