@@ -58,6 +58,22 @@ const ConnectionViewer = ({
       }
     };
 
+    const handleSettingsEvent = (event) => {
+      if (event.type === 'settings') {
+        // Show settings dropdown (simulate click on settings button)
+        const settingsButton = document.querySelector(`[data-tab-id="${tabId}"] .settings-dropdown`);
+        if (settingsButton) {
+          settingsButton.click();
+        }
+      }
+    };
+
+    const handleRenameEvent = (event) => {
+      if (event.type === 'rename') {
+        handleRename();
+      }
+    };
+
     const handleDisconnectEvent = (event) => {
       if (event.type === 'disconnect') {
         // Properly terminate the session before cleanup
@@ -68,9 +84,13 @@ const ConnectionViewer = ({
     const element = document.querySelector(`[data-tab-id="${tabId}"]`);
     if (element) {
       element.addEventListener('reconnect', handleReconnectEvent);
+      element.addEventListener('settings', handleSettingsEvent);
+      element.addEventListener('rename', handleRenameEvent);
       element.addEventListener('disconnect', handleDisconnectEvent);
       return () => {
         element.removeEventListener('reconnect', handleReconnectEvent);
+        element.removeEventListener('settings', handleSettingsEvent);
+        element.removeEventListener('rename', handleRenameEvent);
         element.removeEventListener('disconnect', handleDisconnectEvent);
       };
     }
@@ -324,7 +344,7 @@ const ConnectionViewer = ({
           width: '100%',
           background: '#f8f9fa',
           padding: '40px',
-          minHeight: 'calc(100vh - 80px)' // Account for header
+          minHeight: 'calc(100vh - 52px)' // Account for navbar only
         }}>
           <Spin size="large" />
           <Title level={2} style={{ marginTop: 32, color: '#1890ff', textAlign: 'center' }}>
@@ -358,7 +378,7 @@ const ConnectionViewer = ({
           width: '100%',
           background: '#fff7e6',
           padding: '40px',
-          minHeight: 'calc(100vh - 80px)' // Account for header
+          minHeight: 'calc(100vh - 52px)' // Account for navbar only
         }}>
           <Spin size="large" />
           <Title level={2} style={{ marginTop: 32, color: '#fa8c16', textAlign: 'center' }}>
@@ -391,7 +411,7 @@ const ConnectionViewer = ({
           width: '100%',
           background: '#fff1f0',
           padding: '40px',
-          minHeight: 'calc(100vh - 80px)' // Account for header
+          minHeight: 'calc(100vh - 52px)' // Account for navbar only
         }}>
           <Alert 
             message="Connection Failed" 
@@ -428,7 +448,7 @@ const ConnectionViewer = ({
           flexDirection: 'column',
           margin: 0,
           padding: 0,
-          minHeight: 'calc(100vh - 80px)' // Account for header
+          minHeight: 'calc(100vh - 52px)' // Account for navbar only
         }}>
           {/* Windows Taskbar */}
           <div style={{
@@ -569,88 +589,6 @@ const ConnectionViewer = ({
     }}
     data-tab-id={tabId}
     >
-      {/* Connection Header */}
-      <div style={{ 
-        padding: '2px 8px',
-        borderBottom: '1px solid #f0f0f0',
-        background: '#fafafa',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexShrink: 0,
-        minHeight: '28px',
-        height: '28px'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          {(connection?.type || server?.type || 'RDP') === 'RDP' ? (
-            <DesktopOutlined style={{ 
-              marginRight: '8px', 
-              color: '#1890ff', 
-              fontSize: '16px',
-              padding: '4px',
-              background: '#e6f7ff',
-              borderRadius: '4px'
-            }} />
-          ) : (connection?.type || server?.type) === 'SSH' ? (
-            <CodeOutlined style={{ 
-              marginRight: '8px', 
-              color: '#52c41a', 
-              fontSize: '16px',
-              padding: '4px',
-              background: '#f6ffed',
-              borderRadius: '4px'
-            }} />
-          ) : (
-            <DesktopOutlined style={{ 
-              marginRight: '8px', 
-              color: '#722ed1', 
-              fontSize: '16px',
-              padding: '4px',
-              background: '#f9f0ff',
-              borderRadius: '4px'
-            }} />
-          )}
-        </div>
-        
-        <div style={{ display: 'flex', gap: '4px' }}>
-          <Tooltip title="Connection Settings">
-            <Dropdown
-              menu={{ items: settingsMenuItems }}
-              trigger={['click']}
-              placement="bottomRight"
-            >
-              <Button 
-                type="text" 
-                icon={<SettingOutlined />} 
-                size="small"
-                style={{ 
-                  borderRadius: '4px',
-                  color: '#8c8c8c',
-                  background: 'transparent',
-                  padding: '2px 4px'
-                }}
-              />
-            </Dropdown>
-          </Tooltip>
-          <Tooltip title="Reconnect">
-            <Button 
-              type="text" 
-              icon={<ReloadOutlined />} 
-              size="small"
-              onClick={handleReconnect}
-              aria-label="Reconnect"
-              title="Reconnect"
-              style={{ 
-                borderRadius: '4px',
-                color: '#8c8c8c',
-                background: 'transparent',
-                padding: '2px 4px'
-              }}
-            />
-          </Tooltip>
-        </div>
-      </div>
-      
       {/* Connection Content */}
       <div style={{ 
         flex: 1,
@@ -664,6 +602,22 @@ const ConnectionViewer = ({
         height: '100%'
       }}>
         {renderConnectionView()}
+      </div>
+      
+      {/* Hidden Settings Dropdown - can be triggered from context menu */}
+      <div style={{ position: 'absolute', top: '-1000px', left: '-1000px' }}>
+        <Dropdown
+          menu={{ items: settingsMenuItems }}
+          trigger={['click']}
+          placement="bottomRight"
+        >
+          <Button 
+            className="settings-dropdown"
+            type="text" 
+            icon={<SettingOutlined />} 
+            size="small"
+          />
+        </Dropdown>
       </div>
       
       {/* Rename Modal */}

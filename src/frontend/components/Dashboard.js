@@ -240,15 +240,229 @@ const Dashboard = () => {
     const tabKey = `tab-${tabIdCounter}`;
     const newTab = {
       key: tabKey,
-      title: server.name || server.host,
+      title: (
+        <div 
+          style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            minWidth: '120px',
+            maxWidth: '200px',
+            padding: '8px 12px',
+            fontSize: '13px',
+            lineHeight: '1.2',
+            background: 'transparent',
+            border: 'none'
+          }}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Create context menu
+            const contextMenu = document.createElement('div');
+            contextMenu.className = 'tab-context-menu';
+            contextMenu.style.cssText = `
+              position: fixed;
+              left: ${e.clientX}px;
+              top: ${e.clientY}px;
+              background: ${theme === 'dark' ? '#1f1f1f' : '#ffffff'};
+              border: 1px solid ${theme === 'dark' ? '#434343' : '#d9d9d9'};
+              border-radius: 6px;
+              box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.08), 0 9px 28px 0 rgba(0, 0, 0, 0.05), 0 3px 6px -4px rgba(0, 0, 0, 0.12);
+              padding: 4px 0;
+              min-width: 150px;
+              z-index: 9999;
+              user-select: none;
+            `;
+            
+            const menuItems = [
+              { 
+                label: 'Reconnect', 
+                action: () => {
+                  // Find the ConnectionViewer component for this tab and trigger reconnect
+                  const connectionViewer = document.querySelector(`[data-tab-id="${tabKey}"]`);
+                  if (connectionViewer) {
+                    // Dispatch a custom reconnect event to the ConnectionViewer
+                    const reconnectEvent = new CustomEvent('reconnect', { 
+                      bubbles: true,
+                      detail: { tabId: tabKey }
+                    });
+                    connectionViewer.dispatchEvent(reconnectEvent);
+                  }
+                }
+              },
+              { 
+                label: 'Connection Settings', 
+                action: () => {
+                  // Find the ConnectionViewer component for this tab and trigger settings
+                  const connectionViewer = document.querySelector(`[data-tab-id="${tabKey}"]`);
+                  if (connectionViewer) {
+                    // Dispatch a custom settings event to the ConnectionViewer
+                    const settingsEvent = new CustomEvent('settings', { 
+                      bubbles: true,
+                      detail: { tabId: tabKey }
+                    });
+                    connectionViewer.dispatchEvent(settingsEvent);
+                  }
+                }
+              },
+              { 
+                type: 'divider'
+              },
+              { 
+                label: 'Duplicate Tab', 
+                action: () => handleDuplicate(tabKey)
+              },
+              { 
+                label: 'Rename Tab', 
+                action: () => {
+                  // Find the ConnectionViewer component for this tab and trigger rename
+                  const connectionViewer = document.querySelector(`[data-tab-id="${tabKey}"]`);
+                  if (connectionViewer) {
+                    // Dispatch a custom rename event to the ConnectionViewer
+                    const renameEvent = new CustomEvent('rename', { 
+                      bubbles: true,
+                      detail: { tabId: tabKey }
+                    });
+                    connectionViewer.dispatchEvent(renameEvent);
+                  }
+                }
+              },
+              { 
+                type: 'divider'
+              },
+              { 
+                label: 'Close Tab', 
+                action: () => closeTab(tabKey) 
+              }
+            ];
+            
+            menuItems.forEach(item => {
+              if (item.type === 'divider') {
+                const divider = document.createElement('div');
+                divider.style.cssText = `
+                  height: 1px;
+                  background: ${theme === 'dark' ? '#434343' : '#f0f0f0'};
+                  margin: 4px 0;
+                `;
+                contextMenu.appendChild(divider);
+              } else {
+                const menuItem = document.createElement('div');
+                menuItem.style.cssText = `
+                  display: flex;
+                  align-items: center;
+                  padding: 8px 12px;
+                  cursor: pointer;
+                  font-size: 14px;
+                  color: ${theme === 'dark' ? '#ffffff' : '#262626'};
+                  transition: background 0.2s;
+                `;
+                menuItem.textContent = item.label;
+                menuItem.addEventListener('click', () => {
+                  item.action();
+                  if (document.body.contains(contextMenu)) {
+                    document.body.removeChild(contextMenu);
+                  }
+                });
+                menuItem.addEventListener('mouseenter', () => {
+                  menuItem.style.background = theme === 'dark' ? '#262626' : '#f0f0f0';
+                });
+                menuItem.addEventListener('mouseleave', () => {
+                  menuItem.style.background = 'transparent';
+                });
+                contextMenu.appendChild(menuItem);
+              }
+            });
+            
+            document.body.appendChild(contextMenu);
+            
+            // Remove menu on click outside
+            const removeMenu = (event) => {
+              if (!contextMenu.contains(event.target)) {
+                if (document.body.contains(contextMenu)) {
+                  document.body.removeChild(contextMenu);
+                }
+                document.removeEventListener('click', removeMenu);
+              }
+            };
+            
+            setTimeout(() => {
+              document.addEventListener('click', removeMenu);
+            }, 10);
+          }}
+        >
+          <div 
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between',
+              width: '100%',
+              overflow: 'hidden',
+              pointerEvents: 'none'
+            }}
+          >
+            <span style={{ 
+              fontWeight: 500, 
+              fontSize: '13px', 
+              color: theme === 'dark' ? '#fff' : '#262626',
+              textOverflow: 'ellipsis',
+              overflow: 'hidden',
+              whiteSpace: 'nowrap',
+              flexGrow: 1,
+              marginRight: '8px',
+              pointerEvents: 'auto'
+            }}>
+              {server.name || server.host}
+            </span>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                closeTab(tabKey);
+              }}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              style={{ 
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '16px',
+                height: '16px',
+                borderRadius: '2px',
+                cursor: 'pointer',
+                fontSize: '12px',
+                color: theme === 'dark' ? '#8c8c8c' : '#8c8c8c',
+                transition: 'all 0.2s ease',
+                flexShrink: 0,
+                border: 'none',
+                background: 'transparent',
+                userSelect: 'none',
+                pointerEvents: 'auto'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = theme === 'dark' ? '#3a3a3a' : '#f0f0f0';
+                e.target.style.color = theme === 'dark' ? '#fff' : '#262626';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = 'transparent';
+                e.target.style.color = theme === 'dark' ? '#8c8c8c' : '#8c8c8c';
+              }}
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      ),
       server: server,
-      closable: true // Enable default Ant Design close button
+      closable: false
     };
 
     setConnectionTabs(prev => [...prev, newTab]);
     setActiveTabKey(newTab.key);
     setTabIdCounter(prev => prev + 1);
-  }, [connectionTabs, tabIdCounter, theme]);
+  }, [connectionTabs, tabIdCounter, theme, closeTab, handleDuplicate]);
 
   const closeTab = useCallback((targetKey) => {
     // Find the current tab index
@@ -358,34 +572,87 @@ const Dashboard = () => {
                     }
                   }
                 },
-                { label: 'Close', action: () => closeTab(newTabKey) }
+                { 
+                  label: 'Connection Settings', 
+                  action: () => {
+                    // Find the ConnectionViewer component for this tab and trigger settings
+                    const connectionViewer = document.querySelector(`[data-tab-id="${newTabKey}"]`);
+                    if (connectionViewer) {
+                      // Dispatch a custom settings event to the ConnectionViewer
+                      const settingsEvent = new CustomEvent('settings', { 
+                        bubbles: true,
+                        detail: { tabId: newTabKey }
+                      });
+                      connectionViewer.dispatchEvent(settingsEvent);
+                    }
+                  }
+                },
+                { 
+                  type: 'divider'
+                },
+                { 
+                  label: 'Duplicate Tab', 
+                  action: () => handleDuplicate(newTabKey)
+                },
+                { 
+                  label: 'Rename Tab', 
+                  action: () => {
+                    // Find the ConnectionViewer component for this tab and trigger rename
+                    const connectionViewer = document.querySelector(`[data-tab-id="${newTabKey}"]`);
+                    if (connectionViewer) {
+                      // Dispatch a custom rename event to the ConnectionViewer
+                      const renameEvent = new CustomEvent('rename', { 
+                        bubbles: true,
+                        detail: { tabId: newTabKey }
+                      });
+                      connectionViewer.dispatchEvent(renameEvent);
+                    }
+                  }
+                },
+                { 
+                  type: 'divider'
+                },
+                { 
+                  label: 'Close Tab', 
+                  action: () => closeTab(newTabKey) 
+                }
               ];
               
               menuItems.forEach(item => {
-                const menuItem = document.createElement('div');
-                menuItem.style.cssText = `
-                  display: flex;
-                  align-items: center;
-                  padding: 8px 12px;
-                  cursor: pointer;
-                  font-size: 14px;
-                  color: ${theme === 'dark' ? '#ffffff' : '#262626'};
-                  transition: background 0.2s;
-                `;
-                menuItem.textContent = item.label;
-                menuItem.addEventListener('click', () => {
-                  item.action();
-                  if (document.body.contains(contextMenu)) {
-                    document.body.removeChild(contextMenu);
-                  }
-                });
-                menuItem.addEventListener('mouseenter', () => {
-                  menuItem.style.background = theme === 'dark' ? '#262626' : '#f0f0f0';
-                });
-                menuItem.addEventListener('mouseleave', () => {
-                  menuItem.style.background = 'transparent';
-                });
-                contextMenu.appendChild(menuItem);
+                if (item.type === 'divider') {
+                  const divider = document.createElement('div');
+                  divider.style.cssText = `
+                    height: 1px;
+                    background: ${theme === 'dark' ? '#434343' : '#f0f0f0'};
+                    margin: 4px 0;
+                  `;
+                  contextMenu.appendChild(divider);
+                } else {
+                  const menuItem = document.createElement('div');
+                  menuItem.style.cssText = `
+                    display: flex;
+                    align-items: center;
+                    padding: 8px 12px;
+                    cursor: pointer;
+                    font-size: 14px;
+                    color: ${theme === 'dark' ? '#ffffff' : '#262626'};
+                    transition: background 0.2s;
+                  `;
+                  menuItem.textContent = item.label;
+                  menuItem.addEventListener('click', () => {
+                    item.action();
+                    if (document.body.contains(contextMenu)) {
+                      document.body.removeChild(contextMenu);
+                    }
+                  });
+                  menuItem.addEventListener('mouseenter', () => {
+                    menuItem.style.background = theme === 'dark' ? '#262626' : '#f0f0f0';
+                  });
+                  menuItem.addEventListener('mouseleave', () => {
+                    menuItem.style.background = 'transparent';
+                  });
+                  contextMenu.appendChild(menuItem);
+                }
               });
               
               document.body.appendChild(contextMenu);
@@ -538,34 +805,87 @@ const Dashboard = () => {
                         }
                       }
                     },
-                    { label: 'Close', action: () => closeTab(tabId) }
+                    { 
+                      label: 'Connection Settings', 
+                      action: () => {
+                        // Find the ConnectionViewer component for this tab and trigger settings
+                        const connectionViewer = document.querySelector(`[data-tab-id="${tabId}"]`);
+                        if (connectionViewer) {
+                          // Dispatch a custom settings event to the ConnectionViewer
+                          const settingsEvent = new CustomEvent('settings', { 
+                            bubbles: true,
+                            detail: { tabId: tabId }
+                          });
+                          connectionViewer.dispatchEvent(settingsEvent);
+                        }
+                      }
+                    },
+                    { 
+                      type: 'divider'
+                    },
+                    { 
+                      label: 'Duplicate Tab', 
+                      action: () => handleDuplicate(tabId)
+                    },
+                    { 
+                      label: 'Rename Tab', 
+                      action: () => {
+                        // Find the ConnectionViewer component for this tab and trigger rename
+                        const connectionViewer = document.querySelector(`[data-tab-id="${tabId}"]`);
+                        if (connectionViewer) {
+                          // Dispatch a custom rename event to the ConnectionViewer
+                          const renameEvent = new CustomEvent('rename', { 
+                            bubbles: true,
+                            detail: { tabId: tabId }
+                          });
+                          connectionViewer.dispatchEvent(renameEvent);
+                        }
+                      }
+                    },
+                    { 
+                      type: 'divider'
+                    },
+                    { 
+                      label: 'Close Tab', 
+                      action: () => closeTab(tabId) 
+                    }
                   ];
                   
                   menuItems.forEach(item => {
-                    const menuItem = document.createElement('div');
-                    menuItem.style.cssText = `
-                      display: flex;
-                      align-items: center;
-                      padding: 8px 12px;
-                      cursor: pointer;
-                      font-size: 14px;
-                      color: ${theme === 'dark' ? '#ffffff' : '#262626'};
-                      transition: background 0.2s;
-                    `;
-                    menuItem.textContent = item.label;
-                    menuItem.addEventListener('click', () => {
-                      item.action();
-                      if (document.body.contains(contextMenu)) {
-                        document.body.removeChild(contextMenu);
-                      }
-                    });
-                    menuItem.addEventListener('mouseenter', () => {
-                      menuItem.style.background = theme === 'dark' ? '#262626' : '#f0f0f0';
-                    });
-                    menuItem.addEventListener('mouseleave', () => {
-                      menuItem.style.background = 'transparent';
-                    });
-                    contextMenu.appendChild(menuItem);
+                    if (item.type === 'divider') {
+                      const divider = document.createElement('div');
+                      divider.style.cssText = `
+                        height: 1px;
+                        background: ${theme === 'dark' ? '#434343' : '#f0f0f0'};
+                        margin: 4px 0;
+                      `;
+                      contextMenu.appendChild(divider);
+                    } else {
+                      const menuItem = document.createElement('div');
+                      menuItem.style.cssText = `
+                        display: flex;
+                        align-items: center;
+                        padding: 8px 12px;
+                        cursor: pointer;
+                        font-size: 14px;
+                        color: ${theme === 'dark' ? '#ffffff' : '#262626'};
+                        transition: background 0.2s;
+                      `;
+                      menuItem.textContent = item.label;
+                      menuItem.addEventListener('click', () => {
+                        item.action();
+                        if (document.body.contains(contextMenu)) {
+                          document.body.removeChild(contextMenu);
+                        }
+                      });
+                      menuItem.addEventListener('mouseenter', () => {
+                        menuItem.style.background = theme === 'dark' ? '#262626' : '#f0f0f0';
+                      });
+                      menuItem.addEventListener('mouseleave', () => {
+                        menuItem.style.background = 'transparent';
+                      });
+                      contextMenu.appendChild(menuItem);
+                    }
                   });
                   
                   document.body.appendChild(contextMenu);
