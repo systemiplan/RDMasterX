@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Layout, Menu, Tree, Button, Card, Tabs, Input, Tooltip, Switch, Dropdown, AutoComplete, List, Typography } from 'antd';
 import {
   FolderOpenOutlined, PlusOutlined, UserOutlined, FileOutlined, SettingOutlined, LockOutlined, CloudOutlined, SearchOutlined, BulbOutlined, MoonOutlined,
@@ -724,16 +724,30 @@ const Dashboard = () => {
   const [quickConnect, setQuickConnect] = useState('');
   const [quickConnectSuggestions, setQuickConnectSuggestions] = useState([]);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
+  const [isProcessingQuickConnect, setIsProcessingQuickConnect] = useState(false);
+  const [enterPressed, setEnterPressed] = useState(false);
+  const enterPressedRef = useRef(false);
   const [layoutSearch, setLayoutSearch] = useState('');
   const [filteredTreeData, setFilteredTreeData] = useState([]);
   
   const handleQuickConnect = (e) => {
     if (e.key === 'Enter' && quickConnect.trim()) {
+      console.log('handleQuickConnect - Enter pressed');
       e.preventDefault();
+      e.stopPropagation();
+      
+      // Mark that Enter was pressed and prevent onSelect from firing
+      setEnterPressed(true);
+      enterPressedRef.current = true;
+      
       const inputValue = quickConnect.trim();
       
       // Prevent multiple executions
-      if (quickConnect.processing) return;
+      if (isProcessingQuickConnect) {
+        console.log('handleQuickConnect - Already processing, returning');
+        return;
+      }
+      setIsProcessingQuickConnect(true);
       
       let serverToOpen = null;
       
@@ -832,6 +846,15 @@ const Dashboard = () => {
       setQuickConnect('');
       setQuickConnectSuggestions([]);
       setSelectedSuggestionIndex(-1);
+      
+      // Reset processing flag immediately for Enter key
+      setIsProcessingQuickConnect(false);
+      
+      // Reset enterPressed flag after a longer delay to prevent onSelect
+      setTimeout(() => {
+        setEnterPressed(false);
+        enterPressedRef.current = false;
+      }, 500);
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
       setSelectedSuggestionIndex(prev => 
@@ -846,6 +869,8 @@ const Dashboard = () => {
       setQuickConnect('');
       setQuickConnectSuggestions([]);
       setSelectedSuggestionIndex(-1);
+      setIsProcessingQuickConnect(false);
+      setEnterPressed(false);
     }
   };
 
@@ -1924,61 +1949,92 @@ const Dashboard = () => {
             value={quickConnect}
             onChange={handleQuickConnectChange}
             onKeyDown={handleQuickConnect}
-            onSelect={(value) => {
-              // Find the selected server by name
-              const selectedServer = quickConnectSuggestions.find(s => s.name === value);
-              if (!selectedServer) return;
-              
-              // Check if tab already exists
-              const existingTab = connectionTabs.find(tab => 
-                tab.server.id === selectedServer.id || 
-                tab.server.host === selectedServer.host ||
-                tab.server.hostname === selectedServer.hostname
-              );
-              
-              if (existingTab) {
-                // Show toast and focus existing tab
-                const toast = document.createElement('div');
-                toast.style.cssText = `
-                  position: fixed;
-                  top: 20px;
-                  right: 20px;
-                  background: #fff;
-                  border: 1px solid #d9d9d9;
-                  border-radius: 6px;
-                  padding: 12px 16px;
-                  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                  z-index: 10002;
-                  display: flex;
-                  align-items: center;
-                  gap: 8px;
-                  font-size: 14px;
-                  color: #262626;
-                `;
-                toast.innerHTML = `
-                  <span style="color: #1890ff;">ℹ️</span>
-                  Session already open for ${selectedServer.name}
-                `;
-                document.body.appendChild(toast);
+            onSelect={(value, option) => {
+              // Use a timeout to check if this was triggered by Enter
+              setTimeout(() => {
+                // Debug logging
+                console.log('onSelect triggered (delayed check):', { value, enterPressed, enterPressedRef: enterPressedRef.current, isProcessingQuickConnect });
                 
+                // If Enter was pressed, don't process this onSelect
+                if (enterPressedRef.current || enterPressed) {
+                  console.log('onSelect blocked - Enter key was pressed');
+                  return;
+                }
+                
+                // Prevent multiple quick connects
+                if (isProcessingQuickConnect) {
+                  console.log('onSelect blocked due to isProcessingQuickConnect=true');
+                  return;
+                }
+                
+                // Set processing flag for mouse clicks
+                setIsProcessingQuickConnect(true);
+                
+                console.log('onSelect proceeding with mouse click processing');
+                
+                // Find the selected server by name
+                const selectedServer = quickConnectSuggestions.find(s => s.name === value);
+                if (!selectedServer) {
+                  setIsProcessingQuickConnect(false);
+                  return;
+                }
+                
+                // Check if tab already exists
+                const existingTab = connectionTabs.find(tab => 
+                  tab.server.id === selectedServer.id || 
+                  tab.server.host === selectedServer.host ||
+                  tab.server.hostname === selectedServer.hostname
+                );
+                
+                if (existingTab) {
+                  // Show toast and focus existing tab
+                  const toast = document.createElement('div');
+                  toast.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #fff;
+                    border: 1px solid #d9d9d9;
+                    border-radius: 6px;
+                    padding: 12px 16px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    z-index: 10002;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-size: 14px;
+                    color: #262626;
+                  `;
+                  toast.innerHTML = `
+                    <span style="color: #1890ff;">ℹ️</span>
+                    Session already open for ${selectedServer.name}
+                  `;
+                  document.body.appendChild(toast);
+                  
+                  setTimeout(() => {
+                    if (document.body.contains(toast)) {
+                      document.body.removeChild(toast);
+                    }
+                  }, 2000);
+                  
+                  setActiveTabKey(existingTab.key);
+                } else {
+                  // Open new tab
+                  openConnectionTab(selectedServer);
+                }
+                
+                // Clear input and suggestions
+                setQuickConnect('');
+                setQuickConnectSuggestions([]);
+                setSelectedSuggestionIndex(-1);
+                
+                // Reset processing flag
                 setTimeout(() => {
-                  if (document.body.contains(toast)) {
-                    document.body.removeChild(toast);
-                  }
-                }, 2000);
-                
-                setActiveTabKey(existingTab.key);
-              } else {
-                // Open new tab
-                openConnectionTab(selectedServer);
-              }
-              
-              // Clear input and suggestions
-              setQuickConnect('');
-              setQuickConnectSuggestions([]);
-              setSelectedSuggestionIndex(-1);
+                  setIsProcessingQuickConnect(false);
+                }, 100);
+              }, 10); // Small delay to allow Enter key flag to be set
             }}
-            options={quickConnectSuggestions.map((suggestion, index) => ({
+          options={quickConnectSuggestions.map((suggestion, index) => ({
               value: suggestion.name,
               label: (
                 <div style={{ 
