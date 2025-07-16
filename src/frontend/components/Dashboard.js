@@ -1389,9 +1389,9 @@ const Dashboard = () => {
                 paddingRight: 8,
                 background: theme === 'dark' ? '#23272f' : '#fff'
               }}
-              onSelect={(selectedKeys, info) => {
-                if (info.node.server) {
-                  handleServerClick(info.node.server);
+              onDoubleClick={(e, node) => {
+                if (node.server) {
+                  handleServerClick(node.server);
                 }
               }}
               titleRender={(nodeData) => (
