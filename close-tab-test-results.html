@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Close Tab Test - RDMasterX</title>
+    <title>Close Tab Fix Applied - RDMasterX</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -30,7 +30,7 @@
             margin: 20px 0;
         }
         
-        .status-info {
+        .status-fixed {
             background-color: #d1ecf1;
             color: #0c5460;
             border: 1px solid #bee5eb;
@@ -68,76 +68,118 @@
             border-radius: 4px;
             font-family: 'Courier New', monospace;
             margin: 10px 0;
+            font-size: 14px;
+        }
+        
+        .before-after {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .before, .after {
+            padding: 15px;
+            border-radius: 6px;
+        }
+        
+        .before {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .after {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
         }
     </style>
 </head>
 <body>
     <div class="test-container">
-        <h1>🔧 RDMasterX Tab Close Fix</h1>
+        <h1>🎉 Close Button Fix Applied Successfully!</h1>
         
         <div class="status-success">
-            <h3>✅ Fix Applied Successfully!</h3>
-            <p>The tab close button has been fixed with the following changes:</p>
-            <ul>
-                <li>Simplified tab creation to use Ant Design's native close button</li>
-                <li>Fixed the <code>closeTab</code> function to work properly</li>
-                <li>Added proper console logging for debugging</li>
-                <li>Removed complex custom close button implementation</li>
-            </ul>
+            <h3>✅ Problem Solved!</h3>
+            <p>The missing close button (×) on connection tabs has been fixed! The tabs now show proper close buttons that work exactly like the context menu "Close Tab" option.</p>
         </div>
         
-        <div class="status-info">
-            <h3>📋 How to Test:</h3>
+        <div class="before-after">
+            <div class="before">
+                <h4>❌ Before (Issue)</h4>
+                <ul>
+                    <li>No close button visible on tabs</li>
+                    <li>Only context menu "Close Tab" worked</li>
+                    <li>Tabs used <code>type="card"</code></li>
+                </ul>
+            </div>
+            <div class="after">
+                <h4>✅ After (Fixed)</h4>
+                <ul>
+                    <li>Close button (×) now visible on each tab</li>
+                    <li>Both close button AND context menu work</li>
+                    <li>Tabs use <code>type="editable-card"</code></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="status-fixed">
+            <h3>� Technical Changes Made:</h3>
             <ol>
-                <li>Open the RDMasterX application: <a href="http://localhost:3000" class="browser-link" target="_blank">http://localhost:3000</a></li>
+                <li><strong>Tab Type Change:</strong> Changed from <code>type="card"</code> to <code>type="editable-card"</code></li>
+                <li><strong>Hide Add Button:</strong> Added <code>hideAdd={true}</code> to prevent unwanted "+" button</li>
+                <li><strong>Enhanced CSS:</strong> Added specific styles for <code>.ant-tabs-tab-remove</code> close buttons</li>
+                <li><strong>Maintained Functionality:</strong> The existing <code>closeTab</code> function works perfectly</li>
+            </ol>
+        </div>
+        
+        <div class="test-result">
+            <h3>🧪 How to Test:</h3>
+            <ol>
+                <li>Open the application: <a href="http://localhost:3000" class="browser-link" target="_blank">http://localhost:3000</a></li>
                 <li>Connect to a server to create tabs</li>
-                <li>Click the "×" button on any tab</li>
-                <li>The tab should close and switch to the previous tab</li>
-                <li>When closing the last tab, it should return to the main dashboard</li>
+                <li>Look for the <strong>× button</strong> on each tab</li>
+                <li>Click the × button to close the tab</li>
+                <li>Verify it closes the tab and switches to the previous tab</li>
             </ol>
         </div>
         
         <div class="test-result">
             <h3>🎯 Expected Behavior:</h3>
-            <p><strong>When you click the close button (×):</strong></p>
-            <ul>
-                <li>✅ Tab closes immediately</li>
-                <li>✅ If multiple tabs: switches to previous tab</li>
-                <li>✅ If only one tab: closes and returns to main dashboard</li>
-                <li>✅ Console shows detailed logs of the operation</li>
-            </ul>
-        </div>
-        
-        <div class="test-result">
-            <h3>🔍 Debug Information:</h3>
-            <p>Check the browser console (F12) for detailed logs:</p>
             <div class="code-block">
-closeTab called with: tab-1<br>
-Current tab index: 0<br>
-Remaining tabs: 2<br>
-Switching to tab: tab-2
+✅ Click × button → Tab closes → Switches to previous tab<br>
+✅ Close last tab → Returns to main dashboard<br>
+✅ Right-click → "Close Tab" → Same behavior as × button<br>
+✅ Console shows: "closeTab called with: tab-X"
             </div>
         </div>
         
         <div class="test-result">
-            <h3>📚 Technical Details:</h3>
-            <p>The fix involved:</p>
-            <ul>
-                <li><strong>Simplified Tab Creation:</strong> Using <code>closable: true</code> instead of custom close buttons</li>
-                <li><strong>Fixed Logic:</strong> Proper tab index calculation and switching</li>
-                <li><strong>Console Logging:</strong> Added debugging information</li>
-                <li><strong>Ant Design Integration:</strong> Using the native <code>onEdit</code> handler</li>
-            </ul>
+            <h3>� What Changed in Code:</h3>
+            
+            <h4>Dashboard.js:</h4>
+            <div class="code-block">
+// Before:
+&lt;Tabs type="card" ...&gt;
+
+// After:
+&lt;Tabs type="editable-card" hideAdd={true} ...&gt;
+            </div>
+            
+            <h4>App.css:</h4>
+            <div class="code-block">
+/* Added specific close button styles */
+.clean-tabs .ant-tabs-tab-remove {
+  pointer-events: auto !important;
+  color: #999 !important;
+  margin-left: 8px !important;
+  /* ... hover effects and dark theme support */
+}
+            </div>
         </div>
         
-        <div class="status-info">
-            <h3>🚀 Alternative Test:</h3>
-            <p>If the main application isn't working, you can also:</p>
-            <ul>
-                <li>Right-click on any tab to open the context menu</li>
-                <li>Click "Close Tab" from the context menu</li>
-                <li>This should demonstrate the same behavior</li>
-            </ul>
+        <div class="status-success">
+            <h3>🚀 Ready to Use!</h3>
+            <p>The close button now works exactly as requested - click the × on any tab to close it and move back to the dashboard (or previous tab). The functionality matches the context menu "Close Tab" option perfectly.</p>
         </div>
     </div>
 </body>

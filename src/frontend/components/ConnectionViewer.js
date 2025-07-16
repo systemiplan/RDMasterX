@@ -18,8 +18,6 @@ import {
   DesktopOutlined, 
   CodeOutlined, 
   DisconnectOutlined,
-  FullscreenOutlined,
-  FullscreenExitOutlined,
   SettingOutlined,
   ReloadOutlined,
   CloseOutlined,
@@ -34,7 +32,6 @@ const ConnectionViewer = ({
   connection, 
   server, 
   onClose, 
-  onFullscreen, 
   onDuplicate,
   onRename,
   tabId,
@@ -43,7 +40,6 @@ const ConnectionViewer = ({
   const [connectionStatus, setConnectionStatus] = useState('connecting');
   const [connectionProgress, setConnectionProgress] = useState(0);
   const [errorMessage, setErrorMessage] = useState('');
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [isRenameModalVisible, setIsRenameModalVisible] = useState(false);
   const [newTabName, setNewTabName] = useState('');
 
@@ -238,11 +234,6 @@ const ConnectionViewer = ({
         initiateConnection();
       }, 200);
     }
-  };
-
-  const handleFullscreen = () => {
-    setIsFullscreen(!isFullscreen);
-    if (onFullscreen) onFullscreen(tabId, !isFullscreen);
   };
 
   const handleDuplicate = () => {
@@ -622,23 +613,6 @@ const ConnectionViewer = ({
               borderRadius: '4px'
             }} />
           )}
-          
-          {/* Fullscreen button moved to left side */}
-          <Tooltip title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}>
-            <Button 
-              type="text" 
-              icon={isFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />} 
-              size="small"
-              onClick={handleFullscreen}
-              style={{ 
-                borderRadius: '4px',
-                color: '#8c8c8c',
-                background: 'transparent',
-                marginRight: '4px',
-                padding: '2px 4px'
-              }}
-            />
-          </Tooltip>
         </div>
         
         <div style={{ display: 'flex', gap: '4px' }}>

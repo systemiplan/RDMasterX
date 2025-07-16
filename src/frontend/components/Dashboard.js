@@ -98,8 +98,6 @@ const Dashboard = () => {
   const [connectionTabs, setConnectionTabs] = useState([]);
   const [activeTabKey, setActiveTabKey] = useState(null);
   const [tabIdCounter, setTabIdCounter] = useState(1);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [fullscreenTabId, setFullscreenTabId] = useState(null);
   const [sidebarSearch, setSidebarSearch] = useState('');
   const [sidebarSuggestions, setSidebarSuggestions] = useState([]);
   const [adServers, setAdServers] = useState([]);
@@ -306,11 +304,6 @@ const Dashboard = () => {
       closeTab(targetKey);
     }
   }, [closeTab]);
-
-  const handleFullscreen = useCallback((tabId, shouldFullscreen) => {
-    setIsFullscreen(shouldFullscreen);
-    setFullscreenTabId(shouldFullscreen ? tabId : null);
-  }, []);
 
   const handleDuplicate = useCallback((tabId) => {
     const originalTab = connectionTabs.find(tab => tab.key === tabId);
@@ -1534,11 +1527,6 @@ const Dashboard = () => {
       case 'toggle-sidebar':
         toggleSidebar();
         break;
-      case 'fullscreen':
-        if (activeTabKey) {
-          handleFullscreen(activeTabKey, !isFullscreen);
-        }
-        break;
       case 'theme-toggle':
         handleThemeToggle(theme === 'light');
         break;
@@ -1811,7 +1799,6 @@ const Dashboard = () => {
                 >
                   {[
                     { key: 'toggle-sidebar', icon: <FolderOpenOutlined />, label: 'Toggle Sidebar', description: 'Show/hide sidebar', action: () => handleNavAction('toggle-sidebar') },
-                    { key: 'fullscreen', icon: <DesktopOutlined />, label: 'Fullscreen', description: 'Toggle fullscreen', action: () => handleNavAction('fullscreen') },
                     { key: 'theme-toggle', icon: theme === 'dark' ? <BulbOutlined /> : <MoonOutlined />, label: theme === 'dark' ? 'Light Mode' : 'Dark Mode', description: 'Switch theme', action: () => handleNavAction('theme-toggle') },
                   ].map((item, idx) => (
                     <div
@@ -2650,16 +2637,16 @@ const Dashboard = () => {
           {connectionTabs.length > 0 && (
             <div style={{ 
               position: 'fixed',
-              top: isFullscreen ? '0' : '81px', // Tight to navbar (45px) + header (36px)
-              left: isFullscreen ? '0' : `${80 + (showSecondaryPanel ? sidebarWidth : 0)}px`,
-              right: isFullscreen ? '0' : '0px',
-              bottom: isFullscreen ? '0' : '0px',
+              top: '81px', // Tight to navbar (45px) + header (36px)
+              left: `${80 + (showSecondaryPanel ? sidebarWidth : 0)}px`,
+              right: '0px',
+              bottom: '0px',
               background: theme === 'dark' ? '#2a2a2a' : '#fff',
-              border: isFullscreen ? 'none' : 'none',
+              border: 'none',
               borderRadius: '0',
               boxShadow: 'none',
               overflow: 'hidden',
-              zIndex: isFullscreen ? 9998 : 1000,
+              zIndex: 1000,
               display: 'flex',
               flexDirection: 'column'
             }}>
@@ -2679,7 +2666,7 @@ const Dashboard = () => {
                   background: theme === 'dark' ? '#1a1a1a' : '#f8f9fa',
                   borderBottom: theme === 'dark' ? '1px solid #404040' : '1px solid #e8e9ea',
                   padding: '0 8px',
-                  display: isFullscreen && fullscreenTabId === activeTabKey ? 'none' : 'flex',
+                  display: 'flex',
                   flexShrink: 0,
                   color: theme === 'dark' ? '#fff' : '#333',
                   minHeight: '40px',
@@ -2705,7 +2692,6 @@ const Dashboard = () => {
                         server={tab.server} 
                         tabId={tab.key}
                         onClose={closeTab}
-                        onFullscreen={handleFullscreen}
                         onDuplicate={handleDuplicate}
                         onRename={handleRename}
                         availableServers={[...recentConnections, ...organizationUnits.flatMap(ou => ou.servers || [])]}
