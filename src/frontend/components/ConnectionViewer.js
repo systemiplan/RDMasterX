@@ -323,7 +323,8 @@ const ConnectionViewer = ({
           height: '100%',
           width: '100%',
           background: '#f8f9fa',
-          padding: '60px 40px'
+          padding: '40px',
+          minHeight: 'calc(100vh - 80px)' // Account for header
         }}>
           <Spin size="large" />
           <Title level={2} style={{ marginTop: 32, color: '#1890ff', textAlign: 'center' }}>
@@ -336,7 +337,7 @@ const ConnectionViewer = ({
             percent={connectionProgress} 
             status="active" 
             strokeColor="#1890ff"
-            style={{ width: '100%', maxWidth: '500px' }}
+            style={{ width: '100%', maxWidth: '600px' }}
           />
           <Text type="secondary" style={{ marginTop: 16, fontSize: '14px' }}>
             Establishing secure connection...
@@ -356,7 +357,8 @@ const ConnectionViewer = ({
           height: '100%',
           width: '100%',
           background: '#fff7e6',
-          padding: '60px 40px'
+          padding: '40px',
+          minHeight: 'calc(100vh - 80px)' // Account for header
         }}>
           <Spin size="large" />
           <Title level={2} style={{ marginTop: 32, color: '#fa8c16', textAlign: 'center' }}>
@@ -369,9 +371,9 @@ const ConnectionViewer = ({
             percent={90} 
             status="active" 
             strokeColor="#fa8c16"
-            style={{ width: '100%', maxWidth: '500px' }}
+            style={{ width: '100%', maxWidth: '600px' }}
           />
-          <Text type="secondary" style={{ marginTop: 16, fontSize: '14px' }}>
+          <Text type="secondary" style={{ marginTop: 16, fontSize: '14px', textAlign: 'center' }}>
             Cleaning up session resources...
           </Text>
         </div>
@@ -388,14 +390,15 @@ const ConnectionViewer = ({
           height: '100%',
           width: '100%',
           background: '#fff1f0',
-          padding: '60px 40px'
+          padding: '40px',
+          minHeight: 'calc(100vh - 80px)' // Account for header
         }}>
           <Alert 
             message="Connection Failed" 
             description={errorMessage || 'Unable to establish connection to the server.'}
             type="error" 
             showIcon 
-            style={{ marginBottom: 24, maxWidth: '400px' }}
+            style={{ marginBottom: 24, maxWidth: '600px', width: '100%' }}
           />
           <Button 
             type="primary" 
@@ -411,8 +414,7 @@ const ConnectionViewer = ({
     }
 
     if (connectionStatus === 'connected') {
-      return (
-        <div style={{ 
+      return (        <div style={{
           height: '100%',
           width: '100%',
           background: '#2d3142',
@@ -425,7 +427,8 @@ const ConnectionViewer = ({
           display: 'flex',
           flexDirection: 'column',
           margin: 0,
-          padding: 0
+          padding: 0,
+          minHeight: 'calc(100vh - 80px)' // Account for header
         }}>
           {/* Windows Taskbar */}
           <div style={{
@@ -552,7 +555,7 @@ const ConnectionViewer = ({
 
   return (
     <div style={{ 
-      height: '100%',
+      height: '100vh',
       width: '100%',
       background: '#fff',
       borderRadius: '0',
@@ -651,13 +654,14 @@ const ConnectionViewer = ({
       {/* Connection Content */}
       <div style={{ 
         flex: 1,
-        overflow: 'auto',
+        overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
         margin: 0,
         padding: 0,
         position: 'relative',
-        minHeight: 0
+        minHeight: 0,
+        height: '100%'
       }}>
         {renderConnectionView()}
       </div>
