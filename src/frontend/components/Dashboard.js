@@ -71,22 +71,6 @@ const modernFont = {
 
 const Dashboard = () => {
   const { theme, toggleTheme } = useTheme();
-  // Add CSS animation for pulse effect
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes pulse {
-        0% { opacity: 1; }
-        50% { opacity: 0.5; }
-        100% { opacity: 1; }
-      }
-    `;
-    document.head.appendChild(style);
-    
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
 
   const [stats, setStats] = useState({
     totalConnections: 0,
@@ -224,19 +208,7 @@ const Dashboard = () => {
 
   // Tab management functions
   const openConnectionTab = useCallback((server) => {
-    // Check for existing tab by both name and host to prevent duplicates
-    const existingTab = connectionTabs.find(tab => 
-      tab.server.name === server.name || 
-      tab.server.host === server.host ||
-      (tab.server.name === server.host && tab.server.type === server.type)
-    );
-    
-    if (existingTab) {
-      // Switch to existing tab
-      setActiveTabKey(existingTab.key);
-      return;
-    }
-
+    // Always create a new tab for each connection
     const tabKey = `tab-${tabIdCounter}`;
     const newTab = {
       key: tabKey,
@@ -971,68 +943,8 @@ const Dashboard = () => {
         }
       }
       
-      // Check if this connection already exists
-      const existingTab = connectionTabs.find(tab => 
-        tab.server.id === serverToOpen.id ||
-        tab.server.host === serverToOpen.host ||
-        tab.server.hostname === serverToOpen.hostname ||
-        (tab.server.name.includes(serverToOpen.name) && tab.server.type === serverToOpen.type)
-      );
-      
-      if (existingTab) {
-        // Show toast notification
-        const toast = document.createElement('div');
-        toast.style.cssText = `
-          position: fixed;
-          top: 20px;
-          right: 20px;
-          background: #fff;
-          border: 1px solid #d9d9d9;
-          border-radius: 6px;
-          padding: 12px 16px;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-          z-index: 9999;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 14px;
-          color: #262626;
-          animation: slideIn 0.3s ease-out;
-        `;
-        toast.innerHTML = `
-          <span style="color: #1890ff;">ℹ️</span>
-          Session already open for ${serverToOpen.name}
-        `;
-        
-        // Add animation
-        const style = document.createElement('style');
-        style.textContent = `
-          @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-          }
-        `;
-        document.head.appendChild(style);
-        document.body.appendChild(toast);
-        
-        // Remove toast after 3 seconds
-        setTimeout(() => {
-          toast.style.animation = 'slideIn 0.3s ease-out reverse';
-          setTimeout(() => {
-            if (document.body.contains(toast)) {
-              document.body.removeChild(toast);
-            }
-            if (document.head.contains(style)) {
-              document.head.removeChild(style);
-            }
-          }, 300);
-        }, 3000);
-        
-        // Focus on existing tab
-        setActiveTabKey(existingTab.key);
-      } else {
-        openConnectionTab(serverToOpen);
-      }
+      // Always open a new tab for each connection
+      openConnectionTab(serverToOpen);
       
       // Clear input and suggestions
       setQuickConnect('');
@@ -1373,7 +1285,7 @@ const Dashboard = () => {
               Active Directory Servers
             </Text>
             <Tree
-              showIcon={true}
+              showIcon={false}
               expandedKeys={layoutSearch ? filteredTreeData.flatMap(root => 
                 root.children ? [root.key, ...root.children.map(child => child.key)] : [root.key]
               ) : expandedKeys}
@@ -1395,10 +1307,13 @@ const Dashboard = () => {
                 }
               }}
               titleRender={(nodeData) => (
-                <span style={{
+                <div style={{
                   display: 'flex',
                   alignItems: 'center',
-                  padding: '3px 0',
+                  justifyContent: 'flex-start',
+                  width: '100%',
+                  minHeight: '20px',
+                  padding: '2px 0',
                   cursor: nodeData.server ? 'pointer' : 'default',
                   fontWeight: nodeData.isLeaf ? 'normal' : '500',
                   color: nodeData.isLeaf ? (theme === 'dark' ? '#bbb' : '#666') : (theme === 'dark' ? '#fff' : '#333'),
@@ -1409,23 +1324,18 @@ const Dashboard = () => {
                     nodeData.server?.type?.toLowerCase().includes(layoutSearch.toLowerCase())
                   ) ? (theme === 'dark' ? '#404040' : '#e6f7ff') : 'transparent',
                   borderRadius: '4px',
-                  margin: '1px 0'
+                  margin: '1px 0',
+                  lineHeight: '1.2'
                 }}>
-                  <span style={{ marginRight: '6px', fontSize: '14px' }}>{nodeData.icon}</span>
-                  <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <span style={{ 
+                    whiteSpace: 'nowrap', 
+                    overflow: 'hidden', 
+                    textOverflow: 'ellipsis',
+                    flex: 1
+                  }}>
                     {nodeData.title}
                   </span>
-                  {nodeData.server && (
-                    <span style={{ 
-                      marginLeft: '8px', 
-                      fontSize: '11px', 
-                      color: theme === 'dark' ? '#888' : '#999',
-                      fontWeight: 'normal'
-                    }}>
-                      ({nodeData.server.type})
-                    </span>
-                  )}
-                </span>
+                </div>
               )}
             />
           </div>
@@ -2165,49 +2075,8 @@ const Dashboard = () => {
                   return;
                 }
                 
-                // Check if tab already exists
-                const existingTab = connectionTabs.find(tab => 
-                  tab.server.id === selectedServer.id || 
-                  tab.server.host === selectedServer.host ||
-                  tab.server.hostname === selectedServer.hostname
-                );
-                
-                if (existingTab) {
-                  // Show toast and focus existing tab
-                  const toast = document.createElement('div');
-                  toast.style.cssText = `
-                    position: fixed;
-                    top: 20px;
-                    right: 20px;
-                    background: #fff;
-                    border: 1px solid #d9d9d9;
-                    border-radius: 6px;
-                    padding: 12px 16px;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                    z-index: 10002;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    font-size: 14px;
-                    color: #262626;
-                  `;
-                  toast.innerHTML = `
-                    <span style="color: #1890ff;">ℹ️</span>
-                    Session already open for ${selectedServer.name}
-                  `;
-                  document.body.appendChild(toast);
-                  
-                  setTimeout(() => {
-                    if (document.body.contains(toast)) {
-                      document.body.removeChild(toast);
-                    }
-                  }, 2000);
-                  
-                  setActiveTabKey(existingTab.key);
-                } else {
-                  // Open new tab
-                  openConnectionTab(selectedServer);
-                }
+                // Always open a new tab for each connection
+                openConnectionTab(selectedServer);
                 
                 // Clear input and suggestions
                 setQuickConnect('');
@@ -2267,34 +2136,6 @@ const Dashboard = () => {
             allowClear
             size="middle"
           />
-
-          {/* Connection Status */}
-          {connectionTabs.length > 0 && (
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '6px',
-              padding: '6px 12px',
-              background: theme === 'dark' ? '#2a2a2a' : '#f0f0f0',
-              borderRadius: '6px',
-              border: theme === 'dark' ? '1px solid #404040' : '1px solid #e0e0e0'
-            }}>
-              <div style={{ 
-                width: '6px', 
-                height: '6px', 
-                borderRadius: '50%', 
-                background: '#52c41a',
-                animation: 'pulse 2s infinite'
-              }} />
-              <span style={{ 
-                color: theme === 'dark' ? '#fff' : '#333',
-                fontSize: '12px',
-                fontWeight: 500
-              }}>
-                {connectionTabs.length} active
-              </span>
-            </div>
-          )}
 
           {/* Theme Toggle */}
           <Button

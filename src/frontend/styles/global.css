@@ -1455,3 +1455,34 @@ body {
     border-bottom: none;
   }
 }
+
+/* Tree component alignment improvements */
+.ant-tree .ant-tree-node-content-wrapper {
+  display: flex !important;
+  align-items: center !important;
+  line-height: 1.2 !important;
+}
+
+.ant-tree .ant-tree-title {
+  display: flex !important;
+  align-items: center !important;
+  flex: 1 !important;
+  line-height: 1.2 !important;
+}
+
+.ant-tree .ant-tree-treenode {
+  align-items: center !important;
+}
+
+.ant-tree .ant-tree-switcher {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Clean text-only layout */
+.ant-tree .ant-tree-node-content-wrapper .ant-tree-title > div {
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+}
