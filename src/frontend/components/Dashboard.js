@@ -84,9 +84,12 @@ const Dashboard = () => {
   
   // Add credential modal state
   const [showAddCredential, setShowAddCredential] = useState(false);
+  const [showEditCredential, setShowEditCredential] = useState(false);
+  const [editingCredential, setEditingCredential] = useState(null);
   
-  // Add credentials state
-  const [credentials, setCredentials] = useState([]);
+  // Separate credentials state for personal and database
+  const [personalCredentials, setPersonalCredentials] = useState([]);
+  const [databaseCredentials, setDatabaseCredentials] = useState([]);
   const [credentialsLoading, setCredentialsLoading] = useState(false);
 
   // Context menu state
@@ -94,7 +97,8 @@ const Dashboard = () => {
     visible: false,
     x: 0,
     y: 0,
-    credentialId: null
+    credentialId: null,
+    credentialType: null
   });
 
   // Track which credentials have passwords displayed
@@ -127,7 +131,20 @@ const Dashboard = () => {
   // Elegant dropdown fade-in animation
   useEffect(() => {
     const style = document.createElement('style');
-    style.textContent = `@keyframes dropdownFadeIn { from { opacity: 0; transform: translateY(-12px);} to { opacity: 1; transform: translateY(0);} }`;
+    style.textContent = `
+      @keyframes dropdownFadeIn { 
+        from { opacity: 0; transform: translateY(-12px);} 
+        to { opacity: 1; transform: translateY(0);} 
+      }
+      @keyframes contextMenuFadeIn { 
+        from { opacity: 0; transform: scale(0.8) translateY(-10px);} 
+        to { opacity: 1; transform: scale(1) translateY(0);} 
+      }
+      .context-menu {
+        animation: contextMenuFadeIn 0.15s ease-out;
+        transform-origin: top left;
+      }
+    `;
     document.head.appendChild(style);
     return () => { document.head.removeChild(style); };
   }, []);
@@ -211,7 +228,36 @@ const Dashboard = () => {
       const response = await fetch('/api/credentials');
       if (response.ok) {
         const data = await response.json();
-        setCredentials(data);
+        // All API credentials go to personal list
+        setPersonalCredentials(data);
+        
+        // Add some mock database credentials for demonstration
+        setDatabaseCredentials([
+          {
+            id: 'db-1',
+            description: 'Production Database',
+            username: 'sa',
+            url: 'sql-prod-01.company.com',
+            createdAt: '2024-12-01T10:00:00Z',
+            type: 'database'
+          },
+          {
+            id: 'db-2',
+            description: 'Development Database',
+            username: 'dev_admin',
+            url: 'sql-dev-01.company.com',
+            createdAt: '2024-11-15T14:30:00Z',
+            type: 'database'
+          },
+          {
+            id: 'db-3',
+            description: 'Shared Service Account',
+            username: 'svc_app',
+            url: 'app-server-01.company.com',
+            createdAt: '2024-10-20T09:15:00Z',
+            type: 'database'
+          }
+        ]);
       } else {
         console.error('Failed to fetch credentials:', response.statusText);
       }
@@ -223,15 +269,19 @@ const Dashboard = () => {
   };
 
   // Delete credential function
-  const deleteCredential = async (credentialId) => {
+  const deleteCredential = async (credentialId, credentialType) => {
     try {
       const response = await fetch(`/api/credentials/${credentialId}`, {
         method: 'DELETE'
       });
 
       if (response.ok) {
-        // Remove credential from state
-        setCredentials(prev => prev.filter(cred => cred.id !== credentialId));
+        // Remove credential from appropriate state
+        if (credentialType === 'personal') {
+          setPersonalCredentials(prev => prev.filter(cred => cred.id !== credentialId));
+        } else {
+          setDatabaseCredentials(prev => prev.filter(cred => cred.id !== credentialId));
+        }
         // Update stats
         setStats(prev => ({
           ...prev,
@@ -265,9 +315,39 @@ const Dashboard = () => {
     }
   };
 
+  // Edit credential function
+  const editCredential = (credentialId, credentialType) => {
+    let credential = null;
+    
+    if (credentialType === 'personal') {
+      credential = personalCredentials.find(cred => cred.id === credentialId);
+    } else {
+      credential = databaseCredentials.find(cred => cred.id === credentialId);
+    }
+    
+    if (credential) {
+      setEditingCredential({ ...credential, type: credentialType });
+      setShowEditCredential(true);
+    }
+  };
+
+  // Handle credential updated
+  const handleCredentialUpdated = (updatedCredential) => {
+    if (updatedCredential.type === 'personal') {
+      setPersonalCredentials(prev => 
+        prev.map(cred => cred.id === updatedCredential.id ? updatedCredential : cred)
+      );
+    } else {
+      setDatabaseCredentials(prev => 
+        prev.map(cred => cred.id === updatedCredential.id ? updatedCredential : cred)
+      );
+    }
+    message.success('Credential updated successfully');
+  };
+
   // Handle context menu actions
-  const handleContextMenuAction = (action, credentialId) => {
-    setContextMenu({ visible: false, x: 0, y: 0, credentialId: null });
+  const handleContextMenuAction = (action, credentialId, credentialType) => {
+    setContextMenu({ visible: false, x: 0, y: 0, credentialId: null, credentialType: null });
     
     if (action === 'remove') {
       Modal.confirm({
@@ -276,21 +356,23 @@ const Dashboard = () => {
         okText: 'Delete',
         okType: 'danger',
         cancelText: 'Cancel',
-        onOk: () => deleteCredential(credentialId),
+        onOk: () => deleteCredential(credentialId, credentialType),
       });
     } else if (action === 'copy') {
       copyPassword(credentialId);
+    } else if (action === 'edit') {
+      editCredential(credentialId, credentialType);
     }
   };
 
   // Handle right-click on credential item
-  const handleCredentialRightClick = (e, credentialId) => {
+  const handleCredentialRightClick = (e, credentialId, credentialType = 'personal') => {
     e.preventDefault();
     e.stopPropagation();
     
     // Calculate position to ensure context menu stays within viewport
     const contextMenuWidth = 160;
-    const contextMenuHeight = 80; // Approximate height for two items
+    const contextMenuHeight = 120; // Approximate height for three items
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     
@@ -311,7 +393,8 @@ const Dashboard = () => {
       visible: true,
       x,
       y,
-      credentialId
+      credentialId,
+      credentialType
     });
   };
 
@@ -319,7 +402,7 @@ const Dashboard = () => {
   useEffect(() => {
     const handleClickOutside = () => {
       if (contextMenu.visible) {
-        setContextMenu({ visible: false, x: 0, y: 0, credentialId: null });
+        setContextMenu({ visible: false, x: 0, y: 0, credentialId: null, credentialType: null });
       }
     };
 
@@ -1501,15 +1584,206 @@ const Dashboard = () => {
         );
       
       case 'vault':
+        const renderCredentialList = (credentials, title, type) => {
+          const filteredCredentials = layoutSearch ? 
+            credentials.filter(item => 
+              (item.description && item.description.toLowerCase().includes(layoutSearch.toLowerCase())) ||
+              (item.username && item.username.toLowerCase().includes(layoutSearch.toLowerCase())) ||
+              (item.url && item.url.toLowerCase().includes(layoutSearch.toLowerCase()))
+            ) : credentials;
+
+          return (
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                marginBottom: '12px'
+              }}>
+                <Text strong style={{ 
+                  fontSize: '14px',
+                  color: theme === 'dark' ? '#fff' : '#333'
+                }}>
+                  {title}
+                </Text>
+                <span style={{
+                  fontSize: '11px',
+                  color: theme === 'dark' ? '#64748b' : '#94a3b8',
+                  backgroundColor: theme === 'dark' ? '#374151' : '#f1f5f9',
+                  padding: '2px 6px',
+                  borderRadius: '8px'
+                }}>
+                  {filteredCredentials.length}
+                </span>
+              </div>
+              
+              <List
+                size="small"
+                loading={credentialsLoading}
+                dataSource={filteredCredentials}
+                locale={{
+                  emptyText: type === 'personal' ? 'No personal credentials' : 'No database credentials'
+                }}
+                renderItem={(item) => (
+                  <List.Item 
+                    style={{ 
+                      padding: '12px 8px', 
+                      cursor: 'pointer',
+                      borderBottom: theme === 'dark' ? '1px solid #404040' : '1px solid #f0f0f0',
+                      background: layoutSearch && (
+                        (item.description && item.description.toLowerCase().includes(layoutSearch.toLowerCase())) ||
+                        (item.username && item.username.toLowerCase().includes(layoutSearch.toLowerCase())) ||
+                        (item.url && item.url.toLowerCase().includes(layoutSearch.toLowerCase()))
+                      ) ? (theme === 'dark' ? '#404040' : '#e6f7ff') : 'transparent',
+                      borderRadius: '4px',
+                      margin: '2px 0',
+                      transition: 'all 0.2s ease',
+                      borderLeft: type === 'database' ? `3px solid ${theme === 'dark' ? '#3b82f6' : '#2563eb'}` : 'none'
+                    }} 
+                    onClick={() => {}}
+                    onContextMenu={(e) => handleCredentialRightClick(e, item.id, type)}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = theme === 'dark' ? '#374151' : '#f8fafc';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = layoutSearch && (
+                        (item.description && item.description.toLowerCase().includes(layoutSearch.toLowerCase())) ||
+                        (item.username && item.username.toLowerCase().includes(layoutSearch.toLowerCase())) ||
+                        (item.url && item.url.toLowerCase().includes(layoutSearch.toLowerCase()))
+                      ) ? (theme === 'dark' ? '#404040' : '#e6f7ff') : 'transparent';
+                    }}
+                  >
+                    <div style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px',
+                      width: '100%'
+                    }}>
+                      {/* Title Row */}
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }}>
+                        <span style={{ fontSize: '16px' }}>
+                          {type === 'database' ? '�️' : '�🔐'}
+                        </span>
+                        <span style={{ 
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          color: theme === 'dark' ? '#fff' : '#333',
+                          flex: 1
+                        }}>
+                          {item.description || 'Untitled Credential'}
+                        </span>
+                        {type === 'database' && (
+                          <span style={{
+                            fontSize: '10px',
+                            color: theme === 'dark' ? '#3b82f6' : '#2563eb',
+                            backgroundColor: theme === 'dark' ? '#1e3a8a20' : '#dbeafe',
+                            padding: '1px 4px',
+                            borderRadius: '4px',
+                            fontWeight: '500'
+                          }}>
+                            DB
+                          </span>
+                        )}
+                      </div>
+                      
+                      {/* Details Row */}
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        paddingLeft: '24px'
+                      }}>
+                        {/* Username */}
+                        {item.username && (
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}>
+                            <UserOutlined style={{ 
+                              fontSize: '12px', 
+                              color: theme === 'dark' ? '#94a3b8' : '#64748b' 
+                            }} />
+                            <span style={{
+                              fontSize: '12px',
+                              color: theme === 'dark' ? '#cbd5e1' : '#475569'
+                            }}>
+                              {item.username}
+                            </span>
+                          </div>
+                        )}
+                        
+                        {/* Password Indicator */}
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}>
+                          <LockOutlined style={{ 
+                            fontSize: '12px', 
+                            color: theme === 'dark' ? '#94a3b8' : '#64748b' 
+                          }} />
+                          <span style={{
+                            fontSize: '12px',
+                            color: theme === 'dark' ? '#94a3b8' : '#64748b',
+                            fontFamily: 'monospace'
+                          }}>
+                            ••••••••
+                          </span>
+                        </div>
+                        
+                        {/* URL */}
+                        {item.url && (
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}>
+                            <LinkOutlined style={{ 
+                              fontSize: '12px', 
+                              color: theme === 'dark' ? '#94a3b8' : '#64748b' 
+                            }} />
+                            <span style={{
+                              fontSize: '12px',
+                              color: theme === 'dark' ? '#94a3b8' : '#64748b'
+                            }}>
+                              {item.url}
+                            </span>
+                          </div>
+                        )}
+                        
+                        {/* Created Date */}
+                        {item.createdAt && (
+                          <span style={{
+                            fontSize: '11px',
+                            color: theme === 'dark' ? '#64748b' : '#94a3b8',
+                            marginLeft: 'auto'
+                          }}>
+                            {new Date(item.createdAt).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </List.Item>
+                )}
+              />
+            </div>
+          );
+        };
+
         return (
           <div style={{ padding: '12px 8px' }}>
             <Text strong style={{ 
               fontSize: '16px', 
-              marginBottom: '12px', 
+              marginBottom: '16px', 
               display: 'block',
               color: theme === 'dark' ? '#fff' : '#333'
             }}>
-              Stored Credentials
+              Credential Vault
             </Text>
             
             {/* Quick Add Credential Component */}
@@ -1517,148 +1791,11 @@ const Dashboard = () => {
               onCredentialSaved={handleCredentialSaved}
             />
             
-            <List
-              size="small"
-              loading={credentialsLoading}
-              dataSource={layoutSearch ? 
-                credentials.filter(item => 
-                  (item.description && item.description.toLowerCase().includes(layoutSearch.toLowerCase())) ||
-                  (item.username && item.username.toLowerCase().includes(layoutSearch.toLowerCase())) ||
-                  (item.url && item.url.toLowerCase().includes(layoutSearch.toLowerCase()))
-                ) : credentials
-              }
-              renderItem={(item) => (
-                <List.Item 
-                  style={{ 
-                    padding: '12px 8px', 
-                    cursor: 'pointer',
-                    borderBottom: theme === 'dark' ? '1px solid #404040' : '1px solid #f0f0f0',
-                    background: layoutSearch && (
-                      (item.description && item.description.toLowerCase().includes(layoutSearch.toLowerCase())) ||
-                      (item.username && item.username.toLowerCase().includes(layoutSearch.toLowerCase())) ||
-                      (item.url && item.url.toLowerCase().includes(layoutSearch.toLowerCase()))
-                    ) ? (theme === 'dark' ? '#404040' : '#e6f7ff') : 'transparent',
-                    borderRadius: '4px',
-                    margin: '2px 0',
-                    transition: 'all 0.2s ease'
-                  }} 
-                  onClick={() => {}}
-                  onContextMenu={(e) => handleCredentialRightClick(e, item.id)}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = theme === 'dark' ? '#374151' : '#f8fafc';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = layoutSearch && (
-                      (item.description && item.description.toLowerCase().includes(layoutSearch.toLowerCase())) ||
-                      (item.username && item.username.toLowerCase().includes(layoutSearch.toLowerCase())) ||
-                      (item.url && item.url.toLowerCase().includes(layoutSearch.toLowerCase()))
-                    ) ? (theme === 'dark' ? '#404040' : '#e6f7ff') : 'transparent';
-                  }}
-                >
-                  <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px',
-                    width: '100%'
-                  }}>
-                    {/* Title Row */}
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px'
-                    }}>
-                      <span style={{ fontSize: '16px' }}>🔐</span>
-                      <span style={{ 
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        color: theme === 'dark' ? '#fff' : '#333',
-                        flex: 1
-                      }}>
-                        {item.description || 'Untitled Credential'}
-                      </span>
-                    </div>
-                    
-                    {/* Details Row */}
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      paddingLeft: '24px'
-                    }}>
-                      {/* Username */}
-                      {item.username && (
-                        <div style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px'
-                        }}>
-                          <UserOutlined style={{ 
-                            fontSize: '12px', 
-                            color: theme === 'dark' ? '#94a3b8' : '#64748b' 
-                          }} />
-                          <span style={{
-                            fontSize: '12px',
-                            color: theme === 'dark' ? '#cbd5e1' : '#475569'
-                          }}>
-                            {item.username}
-                          </span>
-                        </div>
-                      )}
-                      
-                      {/* Password Indicator */}
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px'
-                      }}>
-                        <LockOutlined style={{ 
-                          fontSize: '12px', 
-                          color: theme === 'dark' ? '#94a3b8' : '#64748b' 
-                        }} />
-                        <span style={{
-                          fontSize: '12px',
-                          color: theme === 'dark' ? '#94a3b8' : '#64748b',
-                          fontFamily: 'monospace'
-                        }}>
-                          ••••••••
-                        </span>
-                      </div>
-                      
-                      {/* URL */}
-                      {item.url && (
-                        <div style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px'
-                        }}>
-                          <LinkOutlined style={{ 
-                            fontSize: '12px', 
-                            color: theme === 'dark' ? '#94a3b8' : '#64748b' 
-                          }} />
-                          <span style={{
-                            fontSize: '12px',
-                            color: theme === 'dark' ? '#94a3b8' : '#64748b'
-                          }}>
-                            {item.url}
-                          </span>
-                        </div>
-                      )}
-                      
-                      {/* Created Date */}
-                      {item.createdAt && (
-                        <span style={{
-                          fontSize: '11px',
-                          color: theme === 'dark' ? '#64748b' : '#94a3b8',
-                          marginLeft: 'auto'
-                        }}>
-                          {new Date(item.createdAt).toLocaleDateString()}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </List.Item>
-              )}
-            />
+            {/* Personal Credentials */}
+            {renderCredentialList(personalCredentials, 'Personal Credentials', 'personal')}
+            
+            {/* Database Credentials */}
+            {renderCredentialList(databaseCredentials, 'Database Credentials', 'database')}
           </div>
         );
       
@@ -1801,7 +1938,7 @@ const Dashboard = () => {
 
   // Handle credential saved
   const handleCredentialSaved = (credentialData) => {
-    setCredentials(prev => [...prev, credentialData]);
+    setPersonalCredentials(prev => [...prev, credentialData]);
     // Update the stats to reflect the new credential
     setStats(prev => ({
       ...prev,
@@ -2898,6 +3035,121 @@ const Dashboard = () => {
         onCredentialSaved={handleCredentialSaved}
       />
 
+      {/* Edit Credential Modal */}
+      <Modal
+        title="Edit Credential"
+        visible={showEditCredential}
+        onCancel={() => {
+          setShowEditCredential(false);
+          setEditingCredential(null);
+        }}
+        onOk={() => {
+          if (editingCredential) {
+            handleCredentialUpdated(editingCredential);
+            setShowEditCredential(false);
+            setEditingCredential(null);
+          }
+        }}
+        okText="Save Changes"
+        cancelText="Cancel"
+        width={500}
+      >
+        {editingCredential && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '4px', 
+                fontWeight: '500',
+                color: theme === 'dark' ? '#fff' : '#333'
+              }}>
+                Description
+              </label>
+              <Input
+                placeholder="Enter description"
+                value={editingCredential.description || ''}
+                onChange={(e) => setEditingCredential({
+                  ...editingCredential,
+                  description: e.target.value
+                })}
+              />
+            </div>
+            
+            <div>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '4px', 
+                fontWeight: '500',
+                color: theme === 'dark' ? '#fff' : '#333'
+              }}>
+                Username
+              </label>
+              <Input
+                placeholder="Enter username"
+                value={editingCredential.username || ''}
+                onChange={(e) => setEditingCredential({
+                  ...editingCredential,
+                  username: e.target.value
+                })}
+              />
+            </div>
+            
+            <div>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '4px', 
+                fontWeight: '500',
+                color: theme === 'dark' ? '#fff' : '#333'
+              }}>
+                Password
+              </label>
+              <Input.Password
+                placeholder="Enter password"
+                value={editingCredential.password || ''}
+                onChange={(e) => setEditingCredential({
+                  ...editingCredential,
+                  password: e.target.value
+                })}
+              />
+            </div>
+            
+            <div>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '4px', 
+                fontWeight: '500',
+                color: theme === 'dark' ? '#fff' : '#333'
+              }}>
+                URL (Optional)
+              </label>
+              <Input
+                placeholder="Enter URL"
+                value={editingCredential.url || ''}
+                onChange={(e) => setEditingCredential({
+                  ...editingCredential,
+                  url: e.target.value
+                })}
+              />
+            </div>
+            
+            <div style={{
+              padding: '8px',
+              backgroundColor: theme === 'dark' ? '#374151' : '#f1f5f9',
+              borderRadius: '4px',
+              fontSize: '12px',
+              color: theme === 'dark' ? '#94a3b8' : '#64748b'
+            }}>
+              <strong>Type:</strong> {editingCredential.type === 'database' ? 'Database Credential' : 'Personal Credential'}
+              {editingCredential.type === 'database' && (
+                <div style={{ marginTop: '4px', fontStyle: 'italic' }}>
+                  Note: Database credentials may require admin permissions to modify
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </Modal>
+
       {/* Context Menu */}
       {contextMenu.visible && (
         <div
@@ -2937,7 +3189,7 @@ const Dashboard = () => {
               userSelect: 'none',
               borderBottom: theme === 'dark' ? '1px solid #374151' : '1px solid #f1f5f9'
             }}
-            onClick={() => handleContextMenuAction('copy', contextMenu.credentialId)}
+            onClick={() => handleContextMenuAction('copy', contextMenu.credentialId, contextMenu.credentialType)}
             onMouseEnter={(e) => {
               e.target.style.backgroundColor = theme === 'dark' ? '#334155' : '#f1f5f9';
               e.target.style.color = theme === 'dark' ? '#93c5fd' : '#1d4ed8';
@@ -2949,6 +3201,35 @@ const Dashboard = () => {
           >
             <CopyOutlined style={{ fontSize: '14px' }} />
             Copy Password
+          </div>
+          
+          {/* Edit Option */}
+          <div
+            style={{
+              padding: '10px 14px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              color: theme === 'dark' ? '#fbbf24' : '#d97706',
+              fontSize: '14px',
+              fontWeight: '500',
+              transition: 'all 0.2s ease',
+              userSelect: 'none',
+              borderBottom: theme === 'dark' ? '1px solid #374151' : '1px solid #f1f5f9'
+            }}
+            onClick={() => handleContextMenuAction('edit', contextMenu.credentialId, contextMenu.credentialType)}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = theme === 'dark' ? '#334155' : '#f1f5f9';
+              e.target.style.color = theme === 'dark' ? '#fcd34d' : '#b45309';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = 'transparent';
+              e.target.style.color = theme === 'dark' ? '#fbbf24' : '#d97706';
+            }}
+          >
+            <EditOutlined style={{ fontSize: '14px' }} />
+            Edit
           </div>
           
           {/* Remove Option */}
@@ -2965,7 +3246,7 @@ const Dashboard = () => {
               transition: 'all 0.2s ease',
               userSelect: 'none'
             }}
-            onClick={() => handleContextMenuAction('remove', contextMenu.credentialId)}
+            onClick={() => handleContextMenuAction('remove', contextMenu.credentialId, contextMenu.credentialType)}
             onMouseEnter={(e) => {
               e.target.style.backgroundColor = theme === 'dark' ? '#334155' : '#f1f5f9';
               e.target.style.color = theme === 'dark' ? '#fca5a5' : '#b91c1c';
