@@ -235,27 +235,43 @@ const Dashboard = () => {
         setDatabaseCredentials([
           {
             id: 'db-1',
-            description: 'Production Database',
+            description: 'Production SQL Server',
             username: 'sa',
-            url: 'sql-prod-01.company.com',
+            url: 'sql-prod-01.company.com:1433',
             createdAt: '2024-12-01T10:00:00Z',
-            type: 'database'
+            type: 'database',
+            serverType: 'SQL Server',
+            environment: 'Production'
           },
           {
             id: 'db-2',
-            description: 'Development Database',
+            description: 'Development PostgreSQL',
             username: 'dev_admin',
-            url: 'sql-dev-01.company.com',
+            url: 'postgres-dev-01.company.com:5432',
             createdAt: '2024-11-15T14:30:00Z',
-            type: 'database'
+            type: 'database',
+            serverType: 'PostgreSQL',
+            environment: 'Development'
           },
           {
             id: 'db-3',
             description: 'Shared Service Account',
             username: 'svc_app',
-            url: 'app-server-01.company.com',
+            url: 'app-server-01.company.com:3306',
             createdAt: '2024-10-20T09:15:00Z',
-            type: 'database'
+            type: 'database',
+            serverType: 'MySQL',
+            environment: 'UAT'
+          },
+          {
+            id: 'db-4',
+            description: 'Oracle Database',
+            username: 'oracle_admin',
+            url: 'oracle-prod-01.company.com:1521',
+            createdAt: '2024-09-10T16:45:00Z',
+            type: 'database',
+            serverType: 'Oracle',
+            environment: 'Production'
           }
         ]);
       } else {
@@ -271,47 +287,62 @@ const Dashboard = () => {
   // Delete credential function
   const deleteCredential = async (credentialId, credentialType) => {
     try {
-      const response = await fetch(`/api/credentials/${credentialId}`, {
-        method: 'DELETE'
-      });
+      if (credentialType === 'personal') {
+        // For personal credentials, delete from API
+        const response = await fetch(`/api/credentials/${credentialId}`, {
+          method: 'DELETE'
+        });
 
-      if (response.ok) {
-        // Remove credential from appropriate state
-        if (credentialType === 'personal') {
+        if (response.ok) {
           setPersonalCredentials(prev => prev.filter(cred => cred.id !== credentialId));
+          // Update stats
+          setStats(prev => ({
+            ...prev,
+            savedCredentials: Math.max(0, prev.savedCredentials - 1)
+          }));
+          message.success('Personal credential deleted successfully');
         } else {
-          setDatabaseCredentials(prev => prev.filter(cred => cred.id !== credentialId));
+          throw new Error('Failed to delete personal credential');
         }
-        // Update stats
-        setStats(prev => ({
-          ...prev,
-          savedCredentials: Math.max(0, prev.savedCredentials - 1)
-        }));
-        message.success('Credential deleted successfully');
       } else {
-        throw new Error('Failed to delete credential');
+        // For database credentials, remove from local state (in real app, this would delete from DB server)
+        setDatabaseCredentials(prev => prev.filter(cred => cred.id !== credentialId));
+        message.success('Database credential removed successfully');
       }
     } catch (error) {
       console.error('Error deleting credential:', error);
-      message.error('Failed to delete credential');
+      message.error(`Failed to delete ${credentialType} credential`);
     }
   };
 
   // Copy password function
-  const copyPassword = async (credentialId) => {
+  const copyPassword = async (credentialId, credentialType) => {
     try {
-      const response = await fetch(`/api/credentials/${credentialId}/password`);
-      
-      if (response.ok) {
-        const data = await response.json();
-        await navigator.clipboard.writeText(data.password);
-        message.success('Password copied to clipboard!');
+      if (credentialType === 'personal') {
+        // For personal credentials, fetch from API
+        const response = await fetch(`/api/credentials/${credentialId}/password`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          await navigator.clipboard.writeText(data.password);
+          message.success('🔐 Personal credential password copied to clipboard!');
+        } else {
+          throw new Error('Failed to get password from server');
+        }
       } else {
-        throw new Error('Failed to get password');
+        // For database credentials, generate a mock password (in real app, this would come from DB server)
+        const credential = databaseCredentials.find(cred => cred.id === credentialId);
+        const mockPassword = `${credential?.serverType || 'DB'}_${credentialId}_${Date.now().toString().slice(-4)}`;
+        await navigator.clipboard.writeText(mockPassword);
+        message.success(`🏢 Database credential password copied! (${credential?.environment || 'Mock'} environment)`);
       }
     } catch (error) {
       console.error('Error copying password:', error);
-      message.error('Failed to copy password');
+      if (credentialType === 'personal') {
+        message.error('❌ Failed to copy personal credential password. Please try again.');
+      } else {
+        message.error('❌ Failed to copy database credential password. Check server connection.');
+      }
     }
   };
 
@@ -332,17 +363,47 @@ const Dashboard = () => {
   };
 
   // Handle credential updated
-  const handleCredentialUpdated = (updatedCredential) => {
-    if (updatedCredential.type === 'personal') {
-      setPersonalCredentials(prev => 
-        prev.map(cred => cred.id === updatedCredential.id ? updatedCredential : cred)
-      );
-    } else {
-      setDatabaseCredentials(prev => 
-        prev.map(cred => cred.id === updatedCredential.id ? updatedCredential : cred)
-      );
+  const handleCredentialUpdated = async (updatedCredential) => {
+    try {
+      if (updatedCredential.type === 'personal') {
+        // For personal credentials, update via API
+        const response = await fetch(`/api/credentials/${updatedCredential.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            description: updatedCredential.description,
+            username: updatedCredential.username,
+            url: updatedCredential.url
+          })
+        });
+
+        if (response.ok) {
+          const updated = await response.json();
+          setPersonalCredentials(prev => 
+            prev.map(cred => cred.id === updated.id ? updated : cred)
+          );
+          message.success('Personal credential updated successfully');
+        } else {
+          throw new Error('Failed to update personal credential');
+        }
+      } else {
+        // For database credentials, update local state (in real app, this would update DB server)
+        setDatabaseCredentials(prev => 
+          prev.map(cred => cred.id === updatedCredential.id ? {
+            ...cred,
+            description: updatedCredential.description,
+            username: updatedCredential.username,
+            url: updatedCredential.url
+          } : cred)
+        );
+        message.success('Database credential updated successfully');
+      }
+    } catch (error) {
+      console.error('Error updating credential:', error);
+      message.error(`Failed to update ${updatedCredential.type} credential`);
     }
-    message.success('Credential updated successfully');
   };
 
   // Handle context menu actions
@@ -351,15 +412,15 @@ const Dashboard = () => {
     
     if (action === 'remove') {
       Modal.confirm({
-        title: 'Delete Credential',
-        content: 'Are you sure you want to delete this credential? This action cannot be undone.',
+        title: `Delete ${credentialType === 'personal' ? 'Personal' : 'Database'} Credential`,
+        content: `Are you sure you want to delete this ${credentialType} credential? This action cannot be undone.`,
         okText: 'Delete',
         okType: 'danger',
         cancelText: 'Cancel',
         onOk: () => deleteCredential(credentialId, credentialType),
       });
     } else if (action === 'copy') {
-      copyPassword(credentialId);
+      copyPassword(credentialId, credentialType);
     } else if (action === 'edit') {
       editCredential(credentialId, credentialType);
     }
@@ -412,7 +473,68 @@ const Dashboard = () => {
 
   // Tab management functions
   const openConnectionTab = useCallback((server) => {
-    // Always create a new tab for each connection
+    // Check if a tab for this server already exists
+    const existingTab = connectionTabs.find(tab => {
+      const tabServer = tab.server;
+      if (!tabServer || !server) return false;
+      
+      // Compare by server identifier (prefer ID, fallback to host/name)
+      if (tabServer.id && server.id) {
+        return tabServer.id === server.id;
+      }
+      
+      // Compare by host and name
+      const sameHost = tabServer.host === server.host;
+      const sameName = tabServer.name === server.name;
+      
+      return sameHost || (sameName && tabServer.host && server.host);
+    });
+
+    if (existingTab) {
+      // Tab already exists for this server
+      console.log(`Tab already exists for server: ${server.name || server.host}`);
+      
+      // Show user-friendly notification
+      message.info(`Switching to existing connection for "${server.name || server.host}"`);
+      
+      // Focus the existing tab
+      setActiveTabKey(existingTab.key);
+      
+      // Check if the connection needs to be refreshed (timeout/error state)
+      // Find the ConnectionViewer component for this tab
+      setTimeout(() => {
+        const connectionViewer = document.querySelector(`[data-tab-id="${existingTab.key}"]`);
+        if (connectionViewer) {
+          // Check if there's an error or timeout state by looking for retry button
+          const retryButton = connectionViewer.querySelector('[data-testid="retry-connection"], .ant-btn-primary');
+          const errorAlert = connectionViewer.querySelector('.ant-alert-error');
+          const disconnectedState = connectionViewer.querySelector('[data-connection-status="error"]') ||
+                                   connectionViewer.querySelector('[data-connection-status="timeout"]') ||
+                                   connectionViewer.querySelector('[data-connection-status="disconnected"]');
+          
+          // Auto-reconnect if connection is in error/timeout state
+          if (retryButton || errorAlert || disconnectedState) {
+            console.log(`Auto-reconnecting to server: ${server.name || server.host}`);
+            message.success(`Auto-reconnecting to "${server.name || server.host}"...`);
+            
+            // Dispatch a custom reconnect event to the ConnectionViewer
+            const reconnectEvent = new CustomEvent('reconnect', { 
+              bubbles: true,
+              detail: { 
+                tabId: existingTab.key,
+                reason: 'auto-reconnect',
+                server: server
+              }
+            });
+            connectionViewer.dispatchEvent(reconnectEvent);
+          }
+        }
+      }, 100); // Small delay to ensure DOM is ready
+      
+      return; // Don't create a new tab
+    }
+
+    // No existing tab found, create a new one
     const tabKey = `tab-${tabIdCounter}`;
     const newTab = {
       key: tabKey,
@@ -430,102 +552,7 @@ const Dashboard = () => {
             background: 'transparent',
             border: 'none'
           }}
-          onContextMenu={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // Create context menu
-            const contextMenu = document.createElement('div');
-            contextMenu.className = 'tab-context-menu';
-            contextMenu.style.cssText = `
-              position: fixed;
-              left: ${e.clientX}px;
-              top: ${e.clientY}px;
-              background: ${theme === 'dark' ? '#1f1f1f' : '#ffffff'};
-              border: 1px solid ${theme === 'dark' ? '#434343' : '#d9d9d9'};
-              border-radius: 6px;
-              box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.08), 0 9px 28px 0 rgba(0, 0, 0, 0.05), 0 3px 6px -4px rgba(0, 0, 0, 0.12);
-              padding: 4px 0;
-              min-width: 120px;
-              z-index: 9999;
-              user-select: none;
-            `;
-            
-            const menuItems = [
-              { 
-                label: 'Reconnect', 
-                action: () => {
-                  // Find the ConnectionViewer component for this tab and trigger reconnect
-                  const connectionViewer = document.querySelector(`[data-tab-id="${tabKey}"]`);
-                  if (connectionViewer) {
-                    // Dispatch a custom reconnect event to the ConnectionViewer
-                    const reconnectEvent = new CustomEvent('reconnect', { 
-                      bubbles: true,
-                      detail: { tabId: tabKey }
-                    });
-                    connectionViewer.dispatchEvent(reconnectEvent);
-                  }
-                }
-              },
-              { 
-                label: 'Close Tab', 
-                action: () => closeTab(tabKey) 
-              }
-            ];
-            
-            menuItems.forEach(item => {
-              if (item.type === 'divider') {
-                const divider = document.createElement('div');
-                divider.style.cssText = `
-                  height: 1px;
-                  background: ${theme === 'dark' ? '#434343' : '#f0f0f0'};
-                  margin: 4px 0;
-                `;
-                contextMenu.appendChild(divider);
-              } else {
-                const menuItem = document.createElement('div');
-                menuItem.style.cssText = `
-                  display: flex;
-                  align-items: center;
-                  padding: 8px 12px;
-                  cursor: pointer;
-                  font-size: 14px;
-                  color: ${theme === 'dark' ? '#ffffff' : '#262626'};
-                  transition: background 0.2s;
-                `;
-                menuItem.textContent = item.label;
-                menuItem.addEventListener('click', () => {
-                  item.action();
-                  if (document.body.contains(contextMenu)) {
-                    document.body.removeChild(contextMenu);
-                  }
-                });
-                menuItem.addEventListener('mouseenter', () => {
-                  menuItem.style.background = theme === 'dark' ? '#262626' : '#f0f0f0';
-                });
-                menuItem.addEventListener('mouseleave', () => {
-                  menuItem.style.background = 'transparent';
-                });
-                contextMenu.appendChild(menuItem);
-              }
-            });
-            
-            document.body.appendChild(contextMenu);
-            
-            // Remove menu on click outside
-            const removeMenu = (event) => {
-              if (!contextMenu.contains(event.target)) {
-                if (document.body.contains(contextMenu)) {
-                  document.body.removeChild(contextMenu);
-                }
-                document.removeEventListener('click', removeMenu);
-              }
-            };
-            
-            setTimeout(() => {
-              document.addEventListener('click', removeMenu);
-            }, 10);
-          }}
+          onContextMenu={(e) => createTabContextMenu(e, tabKey)}
         >
           <div 
             style={{ 
@@ -564,26 +591,32 @@ const Dashboard = () => {
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: '16px',
-                height: '16px',
-                borderRadius: '2px',
+                width: '20px',
+                height: '20px',
+                borderRadius: '3px',
                 cursor: 'pointer',
-                fontSize: '12px',
+                fontSize: '16px',
+                fontWeight: 'bold',
                 color: theme === 'dark' ? '#8c8c8c' : '#8c8c8c',
                 transition: 'all 0.2s ease',
                 flexShrink: 0,
                 border: 'none',
                 background: 'transparent',
                 userSelect: 'none',
-                pointerEvents: 'auto'
+                pointerEvents: 'auto',
+                position: 'relative',
+                top: '-1px',
+                marginLeft: '4px'
               }}
               onMouseEnter={(e) => {
                 e.target.style.background = theme === 'dark' ? '#3a3a3a' : '#f0f0f0';
                 e.target.style.color = theme === 'dark' ? '#fff' : '#262626';
+                e.target.style.transform = 'scale(1.1)';
               }}
               onMouseLeave={(e) => {
                 e.target.style.background = 'transparent';
                 e.target.style.color = theme === 'dark' ? '#8c8c8c' : '#8c8c8c';
+                e.target.style.transform = 'scale(1)';
               }}
             >
               ×
@@ -598,7 +631,103 @@ const Dashboard = () => {
     setConnectionTabs(prev => [...prev, newTab]);
     setActiveTabKey(newTab.key);
     setTabIdCounter(prev => prev + 1);
-  }, [connectionTabs, tabIdCounter, theme, closeTab, handleDuplicate]);
+  }, [connectionTabs, tabIdCounter, theme, closeTab, createTabContextMenu]);
+
+  // Helper function to create tab context menu
+  const createTabContextMenu = useCallback((e, tabKey) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Remove any existing context menus
+    const existingMenus = document.querySelectorAll('.tab-context-menu');
+    existingMenus.forEach(menu => {
+      if (menu.parentNode) {
+        menu.parentNode.removeChild(menu);
+      }
+    });
+    
+    // Create context menu
+    const contextMenu = document.createElement('div');
+    contextMenu.className = 'tab-context-menu';
+    contextMenu.style.cssText = `
+      position: fixed;
+      left: ${e.clientX}px;
+      top: ${e.clientY}px;
+      background: ${theme === 'dark' ? '#1f1f1f' : '#ffffff'};
+      border: 1px solid ${theme === 'dark' ? '#434343' : '#d9d9d9'};
+      border-radius: 6px;
+      box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.08), 0 9px 28px 0 rgba(0, 0, 0, 0.05), 0 3px 6px -4px rgba(0, 0, 0, 0.12);
+      padding: 4px 0;
+      min-width: 120px;
+      z-index: 9999;
+      user-select: none;
+    `;
+    
+    const menuItems = [
+      { 
+        label: 'Reconnect', 
+        action: () => {
+          // Find the ConnectionViewer component for this tab and trigger reconnect
+          const connectionViewer = document.querySelector(`[data-tab-id="${tabKey}"]`);
+          if (connectionViewer) {
+            // Dispatch a custom reconnect event to the ConnectionViewer
+            const reconnectEvent = new CustomEvent('reconnect', { 
+              bubbles: true,
+              detail: { tabId: tabKey }
+            });
+            connectionViewer.dispatchEvent(reconnectEvent);
+          }
+        }
+      },
+      { 
+        label: 'Close Tab', 
+        action: () => closeTab(tabKey) 
+      }
+    ];
+    
+    menuItems.forEach(item => {
+      const menuItem = document.createElement('div');
+      menuItem.style.cssText = `
+        display: flex;
+        align-items: center;
+        padding: 8px 12px;
+        cursor: pointer;
+        font-size: 14px;
+        color: ${theme === 'dark' ? '#ffffff' : '#262626'};
+        transition: background 0.2s;
+      `;
+      menuItem.textContent = item.label;
+      menuItem.addEventListener('click', () => {
+        item.action();
+        if (document.body.contains(contextMenu)) {
+          document.body.removeChild(contextMenu);
+        }
+      });
+      menuItem.addEventListener('mouseenter', () => {
+        menuItem.style.background = theme === 'dark' ? '#262626' : '#f0f0f0';
+      });
+      menuItem.addEventListener('mouseleave', () => {
+        menuItem.style.background = 'transparent';
+      });
+      contextMenu.appendChild(menuItem);
+    });
+    
+    document.body.appendChild(contextMenu);
+    
+    // Remove menu on click outside
+    const removeMenu = (event) => {
+      if (!contextMenu.contains(event.target)) {
+        if (document.body.contains(contextMenu)) {
+          document.body.removeChild(contextMenu);
+        }
+        document.removeEventListener('click', removeMenu);
+      }
+    };
+    
+    setTimeout(() => {
+      document.addEventListener('click', removeMenu);
+    }, 10);
+  }, [theme, closeTab]);
 
   const closeTab = useCallback((targetKey) => {
     // Find the current tab index
@@ -671,102 +800,7 @@ const Dashboard = () => {
               background: 'transparent',
               border: 'none'
             }}
-            onContextMenu={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              
-              // Create context menu
-              const contextMenu = document.createElement('div');
-              contextMenu.className = 'tab-context-menu';
-              contextMenu.style.cssText = `
-                position: fixed;
-                left: ${e.clientX}px;
-                top: ${e.clientY}px;
-                background: ${theme === 'dark' ? '#1f1f1f' : '#ffffff'};
-                border: 1px solid ${theme === 'dark' ? '#434343' : '#d9d9d9'};
-                border-radius: 6px;
-                box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.08), 0 9px 28px 0 rgba(0, 0, 0, 0.05), 0 3px 6px -4px rgba(0, 0, 0, 0.12);
-                padding: 4px 0;
-                min-width: 120px;
-                z-index: 9999;
-                user-select: none;
-              `;
-              
-              const menuItems = [
-                { 
-                  label: 'Reconnect', 
-                  action: () => {
-                    // Find the ConnectionViewer component for this tab and trigger reconnect
-                    const connectionViewer = document.querySelector(`[data-tab-id="${newTabKey}"]`);
-                    if (connectionViewer) {
-                      // Dispatch a custom reconnect event to the ConnectionViewer
-                      const reconnectEvent = new CustomEvent('reconnect', { 
-                        bubbles: true,
-                        detail: { tabId: newTabKey }
-                      });
-                      connectionViewer.dispatchEvent(reconnectEvent);
-                    }
-                  }
-                },
-                { 
-                  label: 'Close Tab', 
-                  action: () => closeTab(newTabKey) 
-                }
-              ];
-              
-              menuItems.forEach(item => {
-                if (item.type === 'divider') {
-                  const divider = document.createElement('div');
-                  divider.style.cssText = `
-                    height: 1px;
-                    background: ${theme === 'dark' ? '#434343' : '#f0f0f0'};
-                    margin: 4px 0;
-                  `;
-                  contextMenu.appendChild(divider);
-                } else {
-                  const menuItem = document.createElement('div');
-                  menuItem.style.cssText = `
-                    display: flex;
-                    align-items: center;
-                    padding: 8px 12px;
-                    cursor: pointer;
-                    font-size: 14px;
-                    color: ${theme === 'dark' ? '#ffffff' : '#262626'};
-                    transition: background 0.2s;
-                  `;
-                  menuItem.textContent = item.label;
-                  menuItem.addEventListener('click', () => {
-                    item.action();
-                    if (document.body.contains(contextMenu)) {
-                      document.body.removeChild(contextMenu);
-                    }
-                  });
-                  menuItem.addEventListener('mouseenter', () => {
-                    menuItem.style.background = theme === 'dark' ? '#262626' : '#f0f0f0';
-                  });
-                  menuItem.addEventListener('mouseleave', () => {
-                    menuItem.style.background = 'transparent';
-                  });
-                  contextMenu.appendChild(menuItem);
-                }
-              });
-              
-              document.body.appendChild(contextMenu);
-              
-              // Remove menu on click outside
-              const removeMenu = (event) => {
-                if (!contextMenu.contains(event.target)) {
-                  if (document.body.contains(contextMenu)) {
-                    document.body.removeChild(contextMenu);
-                  }
-                  document.removeEventListener('click', removeMenu);
-                }
-              };
-              
-              setTimeout(() => {
-                document.addEventListener('click', removeMenu);
-              }, 10);
-            }}
+            onContextMenu={(e) => createTabContextMenu(e, newTabKey)}
           >
             <div 
               style={{ 
@@ -805,26 +839,32 @@ const Dashboard = () => {
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  width: '16px',
-                  height: '16px',
-                  borderRadius: '2px',
+                  width: '20px',
+                  height: '20px',
+                  borderRadius: '3px',
                   cursor: 'pointer',
-                  fontSize: '12px',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
                   color: theme === 'dark' ? '#8c8c8c' : '#8c8c8c',
                   transition: 'all 0.2s ease',
                   flexShrink: 0,
                   border: 'none',
                   background: 'transparent',
                   userSelect: 'none',
-                  pointerEvents: 'auto'
+                  pointerEvents: 'auto',
+                  position: 'relative',
+                  top: '-1px',
+                  marginLeft: '4px'
                 }}
                 onMouseEnter={(e) => {
                   e.target.style.background = theme === 'dark' ? '#3a3a3a' : '#f0f0f0';
                   e.target.style.color = theme === 'dark' ? '#fff' : '#262626';
+                  e.target.style.transform = 'scale(1.1)';
                 }}
                 onMouseLeave={(e) => {
                   e.target.style.background = 'transparent';
                   e.target.style.color = theme === 'dark' ? '#8c8c8c' : '#8c8c8c';
+                  e.target.style.transform = 'scale(1)';
                 }}
               >
                 ×
@@ -840,7 +880,7 @@ const Dashboard = () => {
       setActiveTabKey(newTab.key);
       setTabIdCounter(prev => prev + 1);
     }
-  }, [connectionTabs, tabIdCounter, theme, closeTab, openConnectionTab]);
+  }, [connectionTabs, tabIdCounter, theme, closeTab, createTabContextMenu]);
 
   const handleRename = useCallback((tabId, newName) => {
     setConnectionTabs(prev => 
@@ -864,102 +904,7 @@ const Dashboard = () => {
                   background: 'transparent',
                   border: 'none'
                 }}
-                onContextMenu={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  
-                  // Create context menu
-                  const contextMenu = document.createElement('div');
-                  contextMenu.className = 'tab-context-menu';
-                  contextMenu.style.cssText = `
-                    position: fixed;
-                    left: ${e.clientX}px;
-                    top: ${e.clientY}px;
-                    background: ${theme === 'dark' ? '#1f1f1f' : '#ffffff'};
-                    border: 1px solid ${theme === 'dark' ? '#434343' : '#d9d9d9'};
-                    border-radius: 6px;
-                    box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.08), 0 9px 28px 0 rgba(0, 0, 0, 0.05), 0 3px 6px -4px rgba(0, 0, 0, 0.12);
-                    padding: 4px 0;
-                    min-width: 120px;
-                    z-index: 9999;
-                    user-select: none;
-                  `;
-                  
-                  const menuItems = [
-                    { 
-                      label: 'Reconnect', 
-                      action: () => {
-                        // Find the ConnectionViewer component for this tab and trigger reconnect
-                        const connectionViewer = document.querySelector(`[data-tab-id="${tabId}"]`);
-                        if (connectionViewer) {
-                          // Dispatch a custom reconnect event to the ConnectionViewer
-                          const reconnectEvent = new CustomEvent('reconnect', { 
-                            bubbles: true,
-                            detail: { tabId: tabId }
-                          });
-                          connectionViewer.dispatchEvent(reconnectEvent);
-                        }
-                      }
-                    },
-                    { 
-                      label: 'Close Tab', 
-                      action: () => closeTab(tabId) 
-                    }
-                  ];
-                  
-                  menuItems.forEach(item => {
-                    if (item.type === 'divider') {
-                      const divider = document.createElement('div');
-                      divider.style.cssText = `
-                        height: 1px;
-                        background: ${theme === 'dark' ? '#434343' : '#f0f0f0'};
-                        margin: 4px 0;
-                      `;
-                      contextMenu.appendChild(divider);
-                    } else {
-                      const menuItem = document.createElement('div');
-                      menuItem.style.cssText = `
-                        display: flex;
-                        align-items: center;
-                        padding: 8px 12px;
-                        cursor: pointer;
-                        font-size: 14px;
-                        color: ${theme === 'dark' ? '#ffffff' : '#262626'};
-                        transition: background 0.2s;
-                      `;
-                      menuItem.textContent = item.label;
-                      menuItem.addEventListener('click', () => {
-                        item.action();
-                        if (document.body.contains(contextMenu)) {
-                          document.body.removeChild(contextMenu);
-                        }
-                      });
-                      menuItem.addEventListener('mouseenter', () => {
-                        menuItem.style.background = theme === 'dark' ? '#262626' : '#f0f0f0';
-                      });
-                      menuItem.addEventListener('mouseleave', () => {
-                        menuItem.style.background = 'transparent';
-                      });
-                      contextMenu.appendChild(menuItem);
-                    }
-                  });
-                  
-                  document.body.appendChild(contextMenu);
-                  
-                  // Remove menu on click outside
-                  const removeMenu = (event) => {
-                    if (!contextMenu.contains(event.target)) {
-                      if (document.body.contains(contextMenu)) {
-                        document.body.removeChild(contextMenu);
-                      }
-                      document.removeEventListener('click', removeMenu);
-                    }
-                  };
-                  
-                  setTimeout(() => {
-                    document.addEventListener('click', removeMenu);
-                  }, 10);
-                }}
+                onContextMenu={(e) => createTabContextMenu(e, tabId)}
               >
                 <div 
                   style={{ 
@@ -998,26 +943,32 @@ const Dashboard = () => {
                       display: 'inline-flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      width: '16px',
-                      height: '16px',
-                      borderRadius: '2px',
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '3px',
                       cursor: 'pointer',
-                      fontSize: '12px',
+                      fontSize: '16px',
+                      fontWeight: 'bold',
                       color: theme === 'dark' ? '#8c8c8c' : '#8c8c8c',
                       transition: 'all 0.2s ease',
                       flexShrink: 0,
                       border: 'none',
                       background: 'transparent',
                       userSelect: 'none',
-                      pointerEvents: 'auto'
+                      pointerEvents: 'auto',
+                      position: 'relative',
+                      top: '-1px',
+                      marginLeft: '4px'
                     }}
                     onMouseEnter={(e) => {
                       e.target.style.background = theme === 'dark' ? '#3a3a3a' : '#f0f0f0';
                       e.target.style.color = theme === 'dark' ? '#fff' : '#262626';
+                      e.target.style.transform = 'scale(1.1)';
                     }}
                     onMouseLeave={(e) => {
                       e.target.style.background = 'transparent';
                       e.target.style.color = theme === 'dark' ? '#8c8c8c' : '#8c8c8c';
+                      e.target.style.transform = 'scale(1)';
                     }}
                   >
                     ×
@@ -1030,7 +981,7 @@ const Dashboard = () => {
         return tab;
       })
     );
-  }, [theme, closeTab, openConnectionTab]);
+  }, [theme, closeTab, createTabContextMenu]);
 
   // Enhanced sidebar search logic
   const handleSidebarSearch = (value) => {
