@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Layout, Menu, Tree, Button, Card, Tabs, Input, Tooltip, Switch, Dropdown, AutoComplete, List, Typography } from 'antd';
 import {
-  FolderOpenOutlined, PlusOutlined, UserOutlined, FileOutlined, SettingOutlined, LockOutlined, CloudOutlined, SearchOutlined, BulbOutlined, MoonOutlined,
+  FolderOpenOutlined, PlusOutlined, UserOutlined, FileOutlined, LockOutlined, CloudOutlined, SearchOutlined, BulbOutlined, MoonOutlined,
   DesktopOutlined, KeyOutlined, CodeOutlined, DatabaseOutlined, MailOutlined, FolderOutlined, LinuxOutlined, LinkOutlined, StarOutlined, SafetyOutlined,
-  AuditOutlined, HistoryOutlined, EyeOutlined, DeleteOutlined, EditOutlined, DownOutlined, InfoCircleOutlined, QuestionCircleOutlined
+  EyeOutlined, DeleteOutlined, EditOutlined, DownOutlined, InfoCircleOutlined, QuestionCircleOutlined
 } from '@ant-design/icons';
 import ActiveDirectoryUserSelector from './ActiveDirectoryUserSelector';
 import ConnectionViewer from './ConnectionViewer';
@@ -20,8 +20,6 @@ const leftMenuItems = [
   { key: 'connections', icon: <LinkOutlined />, label: 'Connections' },
   { key: 'favorites', icon: <StarOutlined />, label: 'Favorites' },
   { key: 'vault', icon: <SafetyOutlined />, label: 'Credential Vault' },
-  { key: 'audit', icon: <AuditOutlined />, label: 'Audit Logs' },
-  { key: 'settings', icon: <SettingOutlined />, label: 'Settings' },
 ];
 
 // Mock data for different sections
@@ -37,20 +35,6 @@ const mockCredentials = [
   { id: 3, name: 'Web Admin', server: 'WEB01', username: 'webadmin', created: '2025-01-05', icon: <CloudOutlined /> },
 ];
 
-const mockAuditLogs = [
-  { id: 1, action: 'User Login', user: 'john.doe', timestamp: '2025-07-15 09:30:25', status: 'Success', icon: <EyeOutlined /> },
-  { id: 2, action: 'Connection Created', user: 'jane.smith', timestamp: '2025-07-15 08:45:12', status: 'Success', icon: <PlusOutlined /> },
-  { id: 3, action: 'Credential Modified', user: 'admin', timestamp: '2025-07-15 07:20:45', status: 'Success', icon: <EditOutlined /> },
-  { id: 4, action: 'Failed Login Attempt', user: 'unknown', timestamp: '2025-07-15 06:15:33', status: 'Failed', icon: <LockOutlined /> },
-];
-
-const mockSettings = [
-  { key: 'theme', label: 'Theme Settings', description: 'Configure application theme and appearance', icon: <BulbOutlined /> },
-  { key: 'security', label: 'Security Settings', description: 'Manage security policies and authentication', icon: <SafetyOutlined /> },
-  { key: 'notifications', label: 'Notifications', description: 'Configure alerts and notifications', icon: <BulbOutlined /> },
-  { key: 'backup', label: 'Backup & Recovery', description: 'Configure backup settings and recovery options', icon: <HistoryOutlined /> },
-];
-
 /* Static tree data - replaced with dynamic AD servers */
 
 const quickActionsForDropdown = [
@@ -62,7 +46,6 @@ const quickActionsForDropdown = [
   { key: 'export-connections', icon: <FileOutlined />, label: 'Export Connections' },
   { key: 'divider2', type: 'divider' },
   { key: 'add-credential', icon: <KeyOutlined />, label: 'Add Credential' },
-  { key: 'settings', icon: <SettingOutlined />, label: 'Settings' },
 ];
 
 const modernFont = {
@@ -1462,86 +1445,6 @@ const Dashboard = () => {
           </div>
         );
       
-      case 'audit':
-        return (
-          <div style={{ padding: '12px 8px' }}>
-            <Text strong style={{ 
-              fontSize: '16px', 
-              marginBottom: '12px', 
-              display: 'block',
-              color: theme === 'dark' ? '#fff' : '#333'
-            }}>
-              Recent Activity
-            </Text>
-            <List
-              size="small"
-              dataSource={mockAuditLogs}
-              renderItem={(item) => (
-                <List.Item style={{ 
-                  padding: '8px 0',
-                  borderBottom: theme === 'dark' ? '1px solid #404040' : '1px solid #f0f0f0'
-                }}>
-                  <List.Item.Meta
-                    avatar={<span style={{ fontSize: '16px', marginRight: '8px' }}>{item.icon}</span>}
-                    title={<span style={{ 
-                      fontSize: '14px',
-                      color: theme === 'dark' ? '#fff' : '#333'
-                    }}>{item.action}</span>}
-                    description={<span style={{ 
-                      fontSize: '12px', 
-                      color: theme === 'dark' ? '#bbb' : '#666'
-                    }}>{item.user} • {item.timestamp}</span>}
-                  />
-                  <span style={{ 
-                    fontSize: '12px', 
-                    color: item.status === 'Success' ? '#52c41a' : '#ff4d4f',
-                    fontWeight: '500'
-                  }}>
-                    {item.status}
-                  </span>
-                </List.Item>
-              )}
-            />
-          </div>
-        );
-      
-      case 'settings':
-        return (
-          <div style={{ padding: '12px 8px' }}>
-            <Text strong style={{ 
-              fontSize: '16px', 
-              marginBottom: '12px', 
-              display: 'block',
-              color: theme === 'dark' ? '#fff' : '#333'
-            }}>
-              Application Settings
-            </Text>
-            <List
-              size="small"
-              dataSource={mockSettings}
-              renderItem={(item) => (
-                <List.Item style={{ 
-                  padding: '8px 0', 
-                  cursor: 'pointer',
-                  borderBottom: theme === 'dark' ? '1px solid #404040' : '1px solid #f0f0f0'
-                }} onClick={() => {}}>
-                  <List.Item.Meta
-                    avatar={<span style={{ fontSize: '16px', marginRight: '8px' }}>{item.icon}</span>}
-                    title={<span style={{ 
-                      fontSize: '14px',
-                      color: theme === 'dark' ? '#fff' : '#333'
-                    }}>{item.label}</span>}
-                    description={<span style={{ 
-                      fontSize: '12px', 
-                      color: theme === 'dark' ? '#bbb' : '#666'
-                    }}>{item.description}</span>}
-                  />
-                </List.Item>
-              )}
-            />
-          </div>
-        );
-      
       default:
         return null;
     }
@@ -1634,9 +1537,6 @@ const Dashboard = () => {
       case 'add-credential':
         alert('Opening Add Credential Dialog...');
         break;
-      case 'settings':
-        setSelectedLeftMenu('settings');
-        break;
       default:
         // Unknown action - no action needed
         break;
@@ -1667,9 +1567,6 @@ const Dashboard = () => {
       case 'manage-vault':
         setSelectedLeftMenu('vault');
         break;
-      case 'audit-logs':
-        setSelectedLeftMenu('audit');
-        break;
       case 'toggle-sidebar':
         toggleSidebar();
         break;
@@ -1678,9 +1575,6 @@ const Dashboard = () => {
         break;
       case 'about':
         alert('RDMasterX - Professional Remote Connection Manager');
-        break;
-      case 'settings':
-        setSelectedLeftMenu('settings');
         break;
       default:
         // Unknown navbar action - no action needed
@@ -1868,7 +1762,6 @@ const Dashboard = () => {
                   {[
                     { key: 'add-credential', icon: <KeyOutlined />, label: 'Add Credential', description: 'Store credentials', action: () => handleNavAction('add-credential') },
                     { key: 'manage-vault', icon: <SafetyOutlined />, label: 'Manage Vault', description: 'Credential storage', action: () => handleNavAction('manage-vault') },
-                    { key: 'audit-logs', icon: <AuditOutlined />, label: 'Audit Logs', description: 'Security monitoring', action: () => handleNavAction('audit-logs') },
                   ].map((item, idx) => (
                     <div
                       key={item.key}
@@ -2032,7 +1925,6 @@ const Dashboard = () => {
                 >
                   {[
                     { key: 'about', icon: <InfoCircleOutlined />, label: 'About', description: 'Application info', action: () => handleNavAction('about') },
-                    { key: 'settings', icon: <SettingOutlined />, label: 'Settings', description: 'App preferences', action: () => handleNavAction('settings') },
                   ].map((item, idx) => (
                     <div
                       key={item.key}
