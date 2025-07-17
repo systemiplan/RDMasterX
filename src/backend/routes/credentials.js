@@ -6,13 +6,15 @@ const router = express.Router();
 let credentials = [];
 
 // Encryption key - in production, use environment variables
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || crypto.randomBytes(32).toString('hex');
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY ? 
+  Buffer.from(process.env.ENCRYPTION_KEY, 'hex') : 
+  Buffer.from('abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890', 'hex');
 const ALGORITHM = 'aes-256-cbc';
 
 // Encrypt password
 function encryptPassword(password) {
   const iv = crypto.randomBytes(16);
-  const cipher = crypto.createCipher(ALGORITHM, ENCRYPTION_KEY);
+  const cipher = crypto.createCipheriv(ALGORITHM, ENCRYPTION_KEY, iv);
   let encrypted = cipher.update(password, 'utf8', 'hex');
   encrypted += cipher.final('hex');
   return {
@@ -22,8 +24,9 @@ function encryptPassword(password) {
 }
 
 // Decrypt password
-function decryptPassword(encryptedData, iv) {
-  const decipher = crypto.createDecipher(ALGORITHM, ENCRYPTION_KEY);
+function decryptPassword(encryptedData, ivHex) {
+  const iv = Buffer.from(ivHex, 'hex');
+  const decipher = crypto.createDecipheriv(ALGORITHM, ENCRYPTION_KEY, iv);
   let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
   decrypted += decipher.final('utf8');
   return decrypted;

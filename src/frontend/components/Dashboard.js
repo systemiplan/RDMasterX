@@ -101,6 +101,10 @@ const Dashboard = () => {
   
   // Add credential modal state
   const [showAddCredential, setShowAddCredential] = useState(false);
+  
+  // Add credentials state
+  const [credentials, setCredentials] = useState([]);
+  const [credentialsLoading, setCredentialsLoading] = useState(false);
 
   // Sidebar width constraints
   const MIN_SIDEBAR_WIDTH = 280;
@@ -120,6 +124,7 @@ const Dashboard = () => {
     fetchDashboardData();
     fetchAdServers();
     fetchOrganizationUnits();
+    fetchCredentials();
     
     // Initialize expanded keys when component mounts
     setExpandedKeys(['ad-root']);
@@ -203,6 +208,23 @@ const Dashboard = () => {
       ]);
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
+    }
+  };
+
+  const fetchCredentials = async () => {
+    setCredentialsLoading(true);
+    try {
+      const response = await fetch('/api/credentials');
+      if (response.ok) {
+        const data = await response.json();
+        setCredentials(data);
+      } else {
+        console.error('Failed to fetch credentials:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Failed to fetch credentials:', error);
+    } finally {
+      setCredentialsLoading(false);
     }
   };
 
@@ -1393,19 +1415,18 @@ const Dashboard = () => {
             
             {/* Quick Add Credential Component */}
             <QuickAddCredential 
-              onCredentialSaved={(credentialData) => {
-                // You can add logic here to refresh the credentials list
-              }}
+              onCredentialSaved={handleCredentialSaved}
             />
             
             <List
               size="small"
+              loading={credentialsLoading}
               dataSource={layoutSearch ? 
-                mockCredentials.filter(item => 
-                  item.name.toLowerCase().includes(layoutSearch.toLowerCase()) ||
-                  item.server.toLowerCase().includes(layoutSearch.toLowerCase()) ||
-                  item.username.toLowerCase().includes(layoutSearch.toLowerCase())
-                ) : mockCredentials
+                credentials.filter(item => 
+                  (item.description && item.description.toLowerCase().includes(layoutSearch.toLowerCase())) ||
+                  (item.username && item.username.toLowerCase().includes(layoutSearch.toLowerCase())) ||
+                  (item.url && item.url.toLowerCase().includes(layoutSearch.toLowerCase()))
+                ) : credentials
               }
               renderItem={(item) => (
                 <List.Item style={{ 
@@ -1413,22 +1434,27 @@ const Dashboard = () => {
                   cursor: 'pointer',
                   borderBottom: theme === 'dark' ? '1px solid #404040' : '1px solid #f0f0f0',
                   background: layoutSearch && (
-                    item.name.toLowerCase().includes(layoutSearch.toLowerCase()) ||
-                    item.server.toLowerCase().includes(layoutSearch.toLowerCase())
+                    (item.description && item.description.toLowerCase().includes(layoutSearch.toLowerCase())) ||
+                    (item.username && item.username.toLowerCase().includes(layoutSearch.toLowerCase())) ||
+                    (item.url && item.url.toLowerCase().includes(layoutSearch.toLowerCase()))
                   ) ? (theme === 'dark' ? '#404040' : '#e6f7ff') : 'transparent',
                   borderRadius: '4px',
                   margin: '2px 0'
                 }} onClick={() => {}}>
                   <List.Item.Meta
-                    avatar={<span style={{ fontSize: '16px', marginRight: '8px' }}>{item.icon}</span>}
+                    avatar={<span style={{ fontSize: '16px', marginRight: '8px' }}>🔐</span>}
                     title={<span style={{ 
                       fontSize: '14px',
                       color: theme === 'dark' ? '#fff' : '#333'
-                    }}>{item.name}</span>}
+                    }}>{item.description || 'Untitled Credential'}</span>}
                     description={<span style={{ 
                       fontSize: '12px', 
                       color: theme === 'dark' ? '#bbb' : '#666'
-                    }}>{item.server} • {item.username}</span>}
+                    }}>
+                      {item.username ? `${item.username}` : 'No username'} 
+                      {item.url ? ` • ${item.url}` : ''}
+                      {item.createdAt ? ` • ${new Date(item.createdAt).toLocaleDateString()}` : ''}
+                    </span>}
                   />
                 </List.Item>
               )}
@@ -1664,9 +1690,14 @@ const Dashboard = () => {
 
   // Handle credential saved
   const handleCredentialSaved = (credentialData) => {
-    // You can add logic here to refresh the credentials list or update the UI
-    // For example, if you have a credentials state, you could update it:
-    // setCredentials(prev => [...prev, credentialData]);
+    setCredentials(prev => [...prev, credentialData]);
+    // Update the stats to reflect the new credential
+    setStats(prev => ({
+      ...prev,
+      savedCredentials: prev.savedCredentials + 1
+    }));
+    // Refresh the credentials list to get the latest data
+    fetchCredentials();
   };
 
   return (
@@ -2196,26 +2227,6 @@ const Dashboard = () => {
             ))}
           </div>
           
-          {/* Sidebar Toggle Button */}
-          <div style={{ 
-            marginTop: 'auto', 
-            display: 'flex', 
-            justifyContent: 'center',
-            paddingBottom: '12px'
-          }}>
-            <Tooltip title={showSecondaryPanel ? 'Collapse Panel' : 'Expand Panel'} placement="right">
-              <Button
-                type="text"
-                icon={showSecondaryPanel ? <FolderOpenOutlined /> : <FolderOutlined />}
-                onClick={toggleSidebar}
-                style={{
-                  color: theme === 'dark' ? '#fff' : '#333',
-                  border: 'none',
-                  background: 'transparent'
-                }}
-              />
-            </Tooltip>
-          </div>
         </Sider>
 
         {/* Secondary Panel */}
@@ -2775,9 +2786,7 @@ const Dashboard = () => {
       <AddCredential
         visible={showAddCredential}
         onClose={() => setShowAddCredential(false)}
-        onCredentialSaved={(credentialData) => {
-          // You can add logic here to refresh the credentials list or update the UI
-        }}
+        onCredentialSaved={handleCredentialSaved}
       />
     </Layout>
   );
