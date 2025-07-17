@@ -1,0 +1,504 @@
+/* ===========================================
+   RDMasterX - Elite Dark Mode Design
+   =========================================== */
+
+/* Modern dark mode color palette */
+:root {
+  --dark-slate-950: #020617;
+  --dark-slate-900: #0f172a;
+  --dark-slate-800: #1e293b;
+  --dark-slate-700: #334155;
+  --dark-slate-600: #475569;
+  --dark-slate-500: #64748b;
+  --dark-slate-400: #94a3b8;
+  --dark-slate-300: #cbd5e1;
+  --dark-slate-200: #e2e8f0;
+  --dark-slate-100: #f1f5f9;
+  --dark-slate-50: #f8fafc;
+  
+  --accent-blue-500: #3b82f6;
+  --accent-blue-600: #2563eb;
+  --accent-blue-700: #1d4ed8;
+  --accent-emerald-500: #10b981;
+  --accent-rose-500: #f43f5e;
+  --accent-amber-500: #f59e0b;
+  --accent-cyan-500: #06b6d4;
+  
+  --glass-light: rgba(255, 255, 255, 0.1);
+  --glass-dark: rgba(0, 0, 0, 0.2);
+  --glass-border: rgba(255, 255, 255, 0.2);
+}
+
+/* Elite dark mode overrides */
+[data-theme="dark"] {
+  /* Enhanced backgrounds with subtle gradients */
+  --bg-primary: linear-gradient(135deg, var(--dark-slate-950) 0%, var(--dark-slate-900) 100%);
+  --bg-secondary: linear-gradient(135deg, var(--dark-slate-900) 0%, var(--dark-slate-800) 100%);
+  --bg-tertiary: linear-gradient(135deg, var(--dark-slate-800) 0%, var(--dark-slate-700) 100%);
+  --bg-elevated: linear-gradient(135deg, var(--dark-slate-800) 0%, var(--dark-slate-700) 100%);
+  
+  /* Premium text colors */
+  --text-primary: var(--dark-slate-50);
+  --text-secondary: var(--dark-slate-300);
+  --text-tertiary: var(--dark-slate-400);
+  --text-muted: var(--dark-slate-500);
+  --text-inverse: var(--dark-slate-900);
+  
+  /* Sophisticated borders */
+  --border-color: var(--dark-slate-700);
+  --border-hover: var(--dark-slate-600);
+  --border-focus: var(--accent-blue-500);
+  
+  /* Enhanced shadows for depth */
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 10px 10px -5px rgba(0, 0, 0, 0.5);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  
+  /* Glass morphism effects */
+  --glass-bg: rgba(15, 23, 42, 0.8);
+  --glass-border: rgba(148, 163, 184, 0.2);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+/* Root layout enhancement */
+[data-theme="dark"] html {
+  background: var(--dark-slate-950);
+}
+
+[data-theme="dark"] body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+/* Enhanced Ant Design components for dark mode */
+[data-theme="dark"] {
+  /* Layout with glass morphism */
+  .ant-layout {
+    background: var(--bg-primary) !important;
+    position: relative;
+  }
+  
+  .ant-layout::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 40% 60%, rgba(245, 158, 11, 0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+  }
+  
+  .ant-layout-sider {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(20px) !important;
+    border-right: 1px solid var(--glass-border) !important;
+    box-shadow: var(--shadow-lg) !important;
+  }
+  
+  .ant-layout-header {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(20px) !important;
+    border-bottom: 1px solid var(--glass-border) !important;
+    box-shadow: var(--shadow-md) !important;
+  }
+  
+  .ant-layout-content {
+    background: var(--bg-secondary) !important;
+  }
+  
+  /* Premium button styles */
+  .ant-btn {
+    background: var(--glass-bg) !important;
+    border: 1px solid var(--glass-border) !important;
+    color: var(--text-primary) !important;
+    backdrop-filter: blur(10px) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    font-weight: 500 !important;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .ant-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s ease;
+    z-index: 1;
+  }
+  
+  .ant-btn:hover::before {
+    left: 100%;
+  }
+  
+  .ant-btn:hover {
+    background: var(--bg-tertiary) !important;
+    border-color: var(--border-hover) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: var(--shadow-lg) !important;
+  }
+  
+  .ant-btn-primary {
+    background: linear-gradient(135deg, var(--accent-blue-500), var(--accent-blue-600)) !important;
+    border: none !important;
+    color: white !important;
+    box-shadow: var(--shadow-md) !important;
+  }
+  
+  .ant-btn-primary:hover {
+    background: linear-gradient(135deg, var(--accent-blue-600), var(--accent-blue-700)) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: var(--shadow-xl) !important;
+  }
+  
+  /* Enhanced input styles */
+  .ant-input,
+  .ant-input-affix-wrapper {
+    background: var(--bg-elevated) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
+    border-radius: var(--radius-md) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: none !important;
+    font-size: 14px !important;
+    padding: 8px 12px !important;
+  }
+  
+  .ant-input:hover,
+  .ant-input-affix-wrapper:hover {
+    border-color: var(--border-hover) !important;
+    box-shadow: var(--shadow-sm) !important;
+    background: var(--bg-elevated) !important;
+  }
+  
+  .ant-input:focus,
+  .ant-input-affix-wrapper:focus,
+  .ant-input-affix-wrapper-focused {
+    border-color: var(--accent-blue-500) !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+    background: var(--bg-elevated) !important;
+    outline: none !important;
+  }
+  
+  .ant-input::placeholder {
+    color: var(--text-muted) !important;
+  }
+  
+  .ant-input-prefix {
+    color: var(--text-secondary) !important;
+  }
+  
+  .ant-input-suffix {
+    color: var(--text-secondary) !important;
+  }
+  
+  /* Remove nested input appearance */
+  .ant-input-affix-wrapper {
+    background: var(--bg-elevated) !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: none !important;
+  }
+  
+  .ant-input-affix-wrapper > input.ant-input {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+  
+  .ant-input-affix-wrapper > input.ant-input:focus {
+    box-shadow: none !important;
+    border: none !important;
+  }
+  
+  /* Premium card styles */
+  .ant-card {
+    background: var(--glass-bg) !important;
+    border: 1px solid var(--glass-border) !important;
+    backdrop-filter: blur(20px) !important;
+    box-shadow: var(--shadow-lg) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .ant-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--glass-border), transparent);
+    z-index: 1;
+  }
+  
+  .ant-card:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: var(--shadow-2xl) !important;
+    border-color: var(--border-hover) !important;
+  }
+  
+  .ant-card-head {
+    background: var(--glass-bg) !important;
+    border-bottom: 1px solid var(--glass-border) !important;
+    backdrop-filter: blur(20px) !important;
+  }
+  
+  .ant-card-body {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(20px) !important;
+  }
+  
+  /* Elite tabs styling */
+  .ant-tabs-nav {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(20px) !important;
+    border-bottom: 1px solid var(--glass-border) !important;
+  }
+  
+  .ant-tabs-tab {
+    color: var(--text-secondary) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative;
+    padding: 12px 24px !important;
+  }
+  
+  .ant-tabs-tab::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent-blue-500), var(--accent-blue-600));
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(-50%);
+    border-radius: 2px;
+  }
+  
+  .ant-tabs-tab:hover::before {
+    width: 50%;
+  }
+  
+  .ant-tabs-tab-active::before {
+    width: 100% !important;
+  }
+  
+  .ant-tabs-tab-active {
+    color: var(--accent-blue-500) !important;
+    background: var(--bg-overlay) !important;
+  }
+  
+  .ant-tabs-ink-bar {
+    background: linear-gradient(90deg, var(--accent-blue-500), var(--accent-blue-600)) !important;
+    height: 3px !important;
+    border-radius: 2px !important;
+  }
+  
+  /* Enhanced tree component */
+  .ant-tree-treenode {
+    padding: 4px 8px !important;
+    margin: 2px 0 !important;
+    border-radius: var(--radius-md) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .ant-tree-treenode::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+    transition: left 0.5s ease;
+    z-index: 1;
+  }
+  
+  .ant-tree-treenode:hover::before {
+    left: 100%;
+  }
+  
+  .ant-tree-treenode:hover {
+    background: var(--bg-overlay) !important;
+    transform: translateX(4px) !important;
+  }
+  
+  .ant-tree-treenode-selected {
+    background: linear-gradient(135deg, var(--accent-blue-500), var(--accent-blue-600)) !important;
+    color: white !important;
+    box-shadow: var(--shadow-md) !important;
+  }
+  
+  /* Premium dropdown styles */
+  .ant-select-dropdown {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid var(--glass-border) !important;
+    box-shadow: var(--shadow-2xl) !important;
+    border-radius: var(--radius-xl) !important;
+  }
+  
+  .ant-select-item {
+    border-radius: var(--radius-md) !important;
+    margin: 4px 8px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+  
+  .ant-select-item:hover {
+    background: var(--bg-overlay) !important;
+    transform: translateX(4px) !important;
+  }
+  
+  .ant-select-item-option-selected {
+    background: linear-gradient(135deg, var(--accent-blue-500), var(--accent-blue-600)) !important;
+    color: white !important;
+  }
+  
+  /* AutoComplete input styling */
+  .ant-select .ant-select-selector {
+    background: var(--bg-elevated) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius-md) !important;
+    box-shadow: none !important;
+    color: var(--text-primary) !important;
+    font-size: 14px !important;
+    padding: 4px 8px !important;
+  }
+  
+  .ant-select:hover .ant-select-selector {
+    border-color: var(--border-hover) !important;
+    box-shadow: var(--shadow-sm) !important;
+  }
+  
+  .ant-select-focused .ant-select-selector {
+    border-color: var(--accent-blue-500) !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+  }
+  
+  .ant-select-selection-search-input {
+    color: var(--text-primary) !important;
+  }
+  
+  .ant-select-selection-placeholder {
+    color: var(--text-muted) !important;
+  }
+  
+  /* Menu enhancements */
+  .ant-menu {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid var(--glass-border) !important;
+    box-shadow: var(--shadow-lg) !important;
+  }
+  
+  .ant-menu-item {
+    border-radius: var(--radius-md) !important;
+    margin: 4px 8px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+  
+  .ant-menu-item:hover {
+    background: var(--bg-overlay) !important;
+    transform: translateX(4px) !important;
+  }
+  
+  .ant-menu-item-selected {
+    background: linear-gradient(135deg, var(--accent-blue-500), var(--accent-blue-600)) !important;
+    color: white !important;
+  }
+  
+  /* Enhanced tooltips */
+  .ant-tooltip-inner {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid var(--glass-border) !important;
+    box-shadow: var(--shadow-lg) !important;
+    color: var(--text-primary) !important;
+  }
+  
+  .ant-tooltip-arrow::before {
+    background: var(--glass-bg) !important;
+    border-color: var(--glass-border) !important;
+  }
+}
+
+/* Custom scrollbar for dark mode */
+[data-theme="dark"] ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: var(--dark-slate-800);
+  border-radius: 4px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--dark-slate-600), var(--dark-slate-700));
+  border-radius: 4px;
+  border: 1px solid var(--dark-slate-700);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--dark-slate-500), var(--dark-slate-600));
+}
+
+/* Loading states */
+[data-theme="dark"] .loading-shimmer {
+  background: linear-gradient(90deg, var(--dark-slate-800) 0%, var(--dark-slate-700) 50%, var(--dark-slate-800) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Focus states for accessibility */
+[data-theme="dark"] *:focus-visible {
+  outline: 2px solid var(--accent-blue-500) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2) !important;
+}
+
+/* High contrast mode adjustments */
+@media (prefers-contrast: high) {
+  [data-theme="dark"] {
+    --text-primary: #ffffff !important;
+    --text-secondary: #f0f0f0 !important;
+    --border-color: #808080 !important;
+    --bg-primary: #000000 !important;
+    --bg-secondary: #1a1a1a !important;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="dark"] *,
+  [data-theme="dark"] *::before,
+  [data-theme="dark"] *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

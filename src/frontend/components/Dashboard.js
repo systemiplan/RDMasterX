@@ -1258,14 +1258,6 @@ const Dashboard = () => {
                 placeholder="Search servers and connections..."
                 value={layoutSearch}
                 onChange={e => handleLayoutSearch(e.target.value)}
-                style={{ 
-                  width: '100%', 
-                  fontSize: '14px',
-                  background: theme === 'dark' ? '#2a2a2a' : '#fff',
-                  borderColor: theme === 'dark' ? '#404040' : '#d9d9d9',
-                  color: theme === 'dark' ? '#fff' : '#333',
-                  borderRadius: '8px'
-                }}
                 prefix={<SearchOutlined style={{ fontSize: '14px' }} />}
                 allowClear
                 onClear={() => {
@@ -2122,16 +2114,6 @@ const Dashboard = () => {
               fontSize: '13px'
             }}
             getPopupContainer={(triggerNode) => triggerNode.parentNode}
-            dropdownStyle={{
-              background: theme === 'dark' ? '#2a2a2a' : '#fff',
-              border: theme === 'dark' ? '1px solid #404040' : '1px solid #e0e0e0',
-              borderRadius: '6px',
-              zIndex: 10001,
-              position: 'absolute',
-              boxShadow: theme === 'dark' ? '0 6px 20px rgba(0,0,0,0.4)' : '0 6px 20px rgba(0,0,0,0.15)',
-              maxHeight: '300px',
-              overflowY: 'auto'
-            }}
             suffixIcon={<LinkOutlined />}
             allowClear
             size="middle"
