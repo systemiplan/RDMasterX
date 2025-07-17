@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Layout, Menu, Tree, Button, Card, Tabs, Input, Tooltip, Switch, Dropdown, AutoComplete, List, Typography } from 'antd';
+import { Layout, Menu, Tree, Button, Card, Tabs, Input, Tooltip, Switch, Dropdown, AutoComplete, List, Typography, Modal, message } from 'antd';
 import {
   FolderOpenOutlined, PlusOutlined, UserOutlined, FileOutlined, LockOutlined, CloudOutlined, SearchOutlined, BulbOutlined, MoonOutlined,
   DesktopOutlined, KeyOutlined, CodeOutlined, DatabaseOutlined, MailOutlined, FolderOutlined, LinuxOutlined, LinkOutlined, StarOutlined, SafetyOutlined,
-  EyeOutlined, DeleteOutlined, EditOutlined, DownOutlined, InfoCircleOutlined, QuestionCircleOutlined
+  EyeOutlined, DeleteOutlined, EditOutlined, DownOutlined, InfoCircleOutlined, QuestionCircleOutlined, CopyOutlined
 } from '@ant-design/icons';
 import ActiveDirectoryUserSelector from './ActiveDirectoryUserSelector';
 import ConnectionViewer from './ConnectionViewer';
@@ -88,6 +88,17 @@ const Dashboard = () => {
   // Add credentials state
   const [credentials, setCredentials] = useState([]);
   const [credentialsLoading, setCredentialsLoading] = useState(false);
+
+  // Context menu state
+  const [contextMenu, setContextMenu] = useState({
+    visible: false,
+    x: 0,
+    y: 0,
+    credentialId: null
+  });
+
+  // Track which credentials have passwords displayed
+  const [displayedPasswords, setDisplayedPasswords] = useState({});
 
   // Sidebar width constraints
   const MIN_SIDEBAR_WIDTH = 280;
@@ -210,6 +221,111 @@ const Dashboard = () => {
       setCredentialsLoading(false);
     }
   };
+
+  // Delete credential function
+  const deleteCredential = async (credentialId) => {
+    try {
+      const response = await fetch(`/api/credentials/${credentialId}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        // Remove credential from state
+        setCredentials(prev => prev.filter(cred => cred.id !== credentialId));
+        // Update stats
+        setStats(prev => ({
+          ...prev,
+          savedCredentials: Math.max(0, prev.savedCredentials - 1)
+        }));
+        message.success('Credential deleted successfully');
+      } else {
+        throw new Error('Failed to delete credential');
+      }
+    } catch (error) {
+      console.error('Error deleting credential:', error);
+      message.error('Failed to delete credential');
+    }
+  };
+
+  // Copy password function
+  const copyPassword = async (credentialId) => {
+    try {
+      const response = await fetch(`/api/credentials/${credentialId}/password`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        await navigator.clipboard.writeText(data.password);
+        message.success('Password copied to clipboard!');
+      } else {
+        throw new Error('Failed to get password');
+      }
+    } catch (error) {
+      console.error('Error copying password:', error);
+      message.error('Failed to copy password');
+    }
+  };
+
+  // Handle context menu actions
+  const handleContextMenuAction = (action, credentialId) => {
+    setContextMenu({ visible: false, x: 0, y: 0, credentialId: null });
+    
+    if (action === 'remove') {
+      Modal.confirm({
+        title: 'Delete Credential',
+        content: 'Are you sure you want to delete this credential? This action cannot be undone.',
+        okText: 'Delete',
+        okType: 'danger',
+        cancelText: 'Cancel',
+        onOk: () => deleteCredential(credentialId),
+      });
+    } else if (action === 'copy') {
+      copyPassword(credentialId);
+    }
+  };
+
+  // Handle right-click on credential item
+  const handleCredentialRightClick = (e, credentialId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Calculate position to ensure context menu stays within viewport
+    const contextMenuWidth = 160;
+    const contextMenuHeight = 80; // Approximate height for two items
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    
+    let x = e.clientX;
+    let y = e.clientY;
+    
+    // Adjust horizontal position if menu would go off-screen
+    if (x + contextMenuWidth > viewportWidth) {
+      x = viewportWidth - contextMenuWidth - 10;
+    }
+    
+    // Adjust vertical position if menu would go off-screen
+    if (y + contextMenuHeight > viewportHeight) {
+      y = y - contextMenuHeight - 10;
+    }
+    
+    setContextMenu({
+      visible: true,
+      x,
+      y,
+      credentialId
+    });
+  };
+
+  // Close context menu when clicking elsewhere
+  useEffect(() => {
+    const handleClickOutside = () => {
+      if (contextMenu.visible) {
+        setContextMenu({ visible: false, x: 0, y: 0, credentialId: null });
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [contextMenu.visible]);
 
   // Tab management functions
   const openConnectionTab = useCallback((server) => {
@@ -1412,33 +1528,134 @@ const Dashboard = () => {
                 ) : credentials
               }
               renderItem={(item) => (
-                <List.Item style={{ 
-                  padding: '8px 0', 
-                  cursor: 'pointer',
-                  borderBottom: theme === 'dark' ? '1px solid #404040' : '1px solid #f0f0f0',
-                  background: layoutSearch && (
-                    (item.description && item.description.toLowerCase().includes(layoutSearch.toLowerCase())) ||
-                    (item.username && item.username.toLowerCase().includes(layoutSearch.toLowerCase())) ||
-                    (item.url && item.url.toLowerCase().includes(layoutSearch.toLowerCase()))
-                  ) ? (theme === 'dark' ? '#404040' : '#e6f7ff') : 'transparent',
-                  borderRadius: '4px',
-                  margin: '2px 0'
-                }} onClick={() => {}}>
-                  <List.Item.Meta
-                    avatar={<span style={{ fontSize: '16px', marginRight: '8px' }}>🔐</span>}
-                    title={<span style={{ 
-                      fontSize: '14px',
-                      color: theme === 'dark' ? '#fff' : '#333'
-                    }}>{item.description || 'Untitled Credential'}</span>}
-                    description={<span style={{ 
-                      fontSize: '12px', 
-                      color: theme === 'dark' ? '#bbb' : '#666'
+                <List.Item 
+                  style={{ 
+                    padding: '12px 8px', 
+                    cursor: 'pointer',
+                    borderBottom: theme === 'dark' ? '1px solid #404040' : '1px solid #f0f0f0',
+                    background: layoutSearch && (
+                      (item.description && item.description.toLowerCase().includes(layoutSearch.toLowerCase())) ||
+                      (item.username && item.username.toLowerCase().includes(layoutSearch.toLowerCase())) ||
+                      (item.url && item.url.toLowerCase().includes(layoutSearch.toLowerCase()))
+                    ) ? (theme === 'dark' ? '#404040' : '#e6f7ff') : 'transparent',
+                    borderRadius: '4px',
+                    margin: '2px 0',
+                    transition: 'all 0.2s ease'
+                  }} 
+                  onClick={() => {}}
+                  onContextMenu={(e) => handleCredentialRightClick(e, item.id)}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = theme === 'dark' ? '#374151' : '#f8fafc';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = layoutSearch && (
+                      (item.description && item.description.toLowerCase().includes(layoutSearch.toLowerCase())) ||
+                      (item.username && item.username.toLowerCase().includes(layoutSearch.toLowerCase())) ||
+                      (item.url && item.url.toLowerCase().includes(layoutSearch.toLowerCase()))
+                    ) ? (theme === 'dark' ? '#404040' : '#e6f7ff') : 'transparent';
+                  }}
+                >
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                    width: '100%'
+                  }}>
+                    {/* Title Row */}
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
                     }}>
-                      {item.username ? `${item.username}` : 'No username'} 
-                      {item.url ? ` • ${item.url}` : ''}
-                      {item.createdAt ? ` • ${new Date(item.createdAt).toLocaleDateString()}` : ''}
-                    </span>}
-                  />
+                      <span style={{ fontSize: '16px' }}>🔐</span>
+                      <span style={{ 
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        color: theme === 'dark' ? '#fff' : '#333',
+                        flex: 1
+                      }}>
+                        {item.description || 'Untitled Credential'}
+                      </span>
+                    </div>
+                    
+                    {/* Details Row */}
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      paddingLeft: '24px'
+                    }}>
+                      {/* Username */}
+                      {item.username && (
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}>
+                          <UserOutlined style={{ 
+                            fontSize: '12px', 
+                            color: theme === 'dark' ? '#94a3b8' : '#64748b' 
+                          }} />
+                          <span style={{
+                            fontSize: '12px',
+                            color: theme === 'dark' ? '#cbd5e1' : '#475569'
+                          }}>
+                            {item.username}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {/* Password Indicator */}
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}>
+                        <LockOutlined style={{ 
+                          fontSize: '12px', 
+                          color: theme === 'dark' ? '#94a3b8' : '#64748b' 
+                        }} />
+                        <span style={{
+                          fontSize: '12px',
+                          color: theme === 'dark' ? '#94a3b8' : '#64748b',
+                          fontFamily: 'monospace'
+                        }}>
+                          ••••••••
+                        </span>
+                      </div>
+                      
+                      {/* URL */}
+                      {item.url && (
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}>
+                          <LinkOutlined style={{ 
+                            fontSize: '12px', 
+                            color: theme === 'dark' ? '#94a3b8' : '#64748b' 
+                          }} />
+                          <span style={{
+                            fontSize: '12px',
+                            color: theme === 'dark' ? '#94a3b8' : '#64748b'
+                          }}>
+                            {item.url}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {/* Created Date */}
+                      {item.createdAt && (
+                        <span style={{
+                          fontSize: '11px',
+                          color: theme === 'dark' ? '#64748b' : '#94a3b8',
+                          marginLeft: 'auto'
+                        }}>
+                          {new Date(item.createdAt).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </List.Item>
               )}
             />
@@ -2680,6 +2897,89 @@ const Dashboard = () => {
         onClose={() => setShowAddCredential(false)}
         onCredentialSaved={handleCredentialSaved}
       />
+
+      {/* Context Menu */}
+      {contextMenu.visible && (
+        <div
+          className="context-menu"
+          style={{
+            position: 'fixed',
+            top: contextMenu.y,
+            left: contextMenu.x,
+            backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff',
+            border: theme === 'dark' ? '1px solid #475569' : '1px solid #e2e8f0',
+            borderRadius: '8px',
+            boxShadow: theme === 'dark' 
+              ? '0 10px 25px rgba(0, 0, 0, 0.5), 0 4px 6px rgba(0, 0, 0, 0.3)' 
+              : '0 10px 25px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05)',
+            zIndex: 10000,
+            minWidth: '160px',
+            overflow: 'hidden',
+            backdropFilter: theme === 'dark' ? 'blur(12px)' : 'none',
+            background: theme === 'dark' 
+              ? 'linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(51, 65, 85, 0.95) 100%)' 
+              : '#ffffff'
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Copy Password Option */}
+          <div
+            style={{
+              padding: '10px 14px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              color: theme === 'dark' ? '#60a5fa' : '#2563eb',
+              fontSize: '14px',
+              fontWeight: '500',
+              transition: 'all 0.2s ease',
+              userSelect: 'none',
+              borderBottom: theme === 'dark' ? '1px solid #374151' : '1px solid #f1f5f9'
+            }}
+            onClick={() => handleContextMenuAction('copy', contextMenu.credentialId)}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = theme === 'dark' ? '#334155' : '#f1f5f9';
+              e.target.style.color = theme === 'dark' ? '#93c5fd' : '#1d4ed8';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = 'transparent';
+              e.target.style.color = theme === 'dark' ? '#60a5fa' : '#2563eb';
+            }}
+          >
+            <CopyOutlined style={{ fontSize: '14px' }} />
+            Copy Password
+          </div>
+          
+          {/* Remove Option */}
+          <div
+            style={{
+              padding: '10px 14px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              color: theme === 'dark' ? '#f87171' : '#dc2626',
+              fontSize: '14px',
+              fontWeight: '500',
+              transition: 'all 0.2s ease',
+              userSelect: 'none'
+            }}
+            onClick={() => handleContextMenuAction('remove', contextMenu.credentialId)}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = theme === 'dark' ? '#334155' : '#f1f5f9';
+              e.target.style.color = theme === 'dark' ? '#fca5a5' : '#b91c1c';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = 'transparent';
+              e.target.style.color = theme === 'dark' ? '#f87171' : '#dc2626';
+            }}
+          >
+            <DeleteOutlined style={{ fontSize: '14px' }} />
+            Remove
+          </div>
+        </div>
+      )}
     </Layout>
   );
 };

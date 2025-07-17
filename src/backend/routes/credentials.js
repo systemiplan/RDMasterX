@@ -118,6 +118,42 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET /api/credentials/:id/password - Get decrypted password for specific credential
+router.get('/:id/password', async (req, res) => {
+  try {
+    const credential = credentials.find(cred => cred.id === req.params.id);
+    
+    if (!credential) {
+      return res.status(404).json({
+        error: 'Credential not found'
+      });
+    }
+
+    // Decrypt and return password
+    let decryptedPassword = '';
+    if (credential.password && credential.password.encryptedData && credential.password.iv) {
+      try {
+        decryptedPassword = decryptPassword(credential.password.encryptedData, credential.password.iv);
+      } catch (decryptError) {
+        console.error('Error decrypting password:', decryptError);
+        return res.status(500).json({
+          error: 'Failed to decrypt password'
+        });
+      }
+    }
+
+    res.json({
+      id: credential.id,
+      password: decryptedPassword
+    });
+  } catch (error) {
+    console.error('Error fetching credential password:', error);
+    res.status(500).json({
+      error: 'Internal server error'
+    });
+  }
+});
+
 // GET /api/credentials/:id - Get specific credential
 router.get('/:id', async (req, res) => {
   try {
